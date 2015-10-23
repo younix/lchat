@@ -5,7 +5,7 @@ CFLAGS=-std=c99 -pedantic -Wall -Wextra
 
 all: lchat
 clean:
-	rm -f *.o
+	rm -f lchat *.o
 
 lchat: lchat.o slackline.o
 	$(CC) -o $@ lchat.o slackline.o
