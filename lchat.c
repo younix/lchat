@@ -4,6 +4,8 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "slackline.h"
+
 struct termios origin_term;
 
 void
@@ -17,12 +19,14 @@ int
 main(void)
 {
 	struct termios term;
+	struct slackline *sl = sl_init();
 	int fd = STDIN_FILENO;
 	int c;
 
 	if (isatty(fd) == 0)
 		err(EXIT_FAILURE, "isatty");
 
+	/* preprate terminal reset on exit */
 	if (tcgetattr(fd, &origin_term) == -1)
 		err(EXIT_FAILURE, "tcgetattr");
 
@@ -42,10 +46,11 @@ main(void)
 	setbuf(stdout, NULL);
 
 	while ((c = getchar()) != 13) {
-		//printf("c: %d\r\n", c);
-		if (c >= 32 && c < 127)
-			putchar(c);
+		sl_keystroke(sl, c);
+		printf("c: %d: buf: %s\r\n", c, sl->buf);
 	}
+
+	puts("\r");
 
 	return EXIT_SUCCESS;
 }
