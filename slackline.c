@@ -13,7 +13,11 @@ sl_init(void)
 		return NULL;
 
 	sl->bufsize = BUFSIZ;
-	sl->buf = malloc(sl->bufsize);
+	if ((sl->buf = malloc(sl->bufsize)) == NULL) {
+		free(sl);
+		return NULL;
+	}
+
 	sl->buf[0] = '\0';
 	sl->len = 0;
 	sl->cur = 0;
@@ -44,14 +48,17 @@ sl_keystroke(struct slackline *sl, int key)
 			sl->buf[sl->cur++] = key;
 			sl->buf[sl->cur] = '\0';
 		}
-
+		sl->len++;
 		return 0;
 	}
 
 	/* handle ctl keys */
 	switch (key) {
 	case 8:	/* backspace */
+		if (sl->cur == 0)
+			break;
 		sl->cur--;
+		sl->len--;
 		sl->buf[sl->cur] = '\0';
 		break;
 	}
