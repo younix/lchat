@@ -1,6 +1,7 @@
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <term.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -20,8 +21,17 @@ main(void)
 {
 	struct termios term;
 	struct slackline *sl = sl_init();
+	char *term_name = getenv("TERM");
 	int fd = STDIN_FILENO;
 	int c;
+
+	if (term_name == NULL)
+		errx(EXIT_FAILURE, "environment TERM is not set");
+
+	switch (tgetent(NULL, term_name)) {
+	case -1: err(EXIT_FAILURE, "tgetent");
+	case 0: errx(EXIT_FAILURE, "no termcap entry found for %s", term_name);
+	}
 
 	if (isatty(fd) == 0)
 		err(EXIT_FAILURE, "isatty");
@@ -46,7 +56,8 @@ main(void)
 	setbuf(stdout, NULL);
 
 	while ((c = getchar()) != 13) {
-		sl_keystroke(sl, c);
+		if (sl_keystroke(sl, c) == -1)
+			errx(EXIT_FAILURE, "sl_keystroke");
 		printf("c: %d: buf: %s\r\n", c, sl->buf);
 	}
 

@@ -8,7 +8,7 @@ clean:
 	rm -f lchat *.o
 
 lchat: lchat.o slackline.o
-	$(CC) -o $@ lchat.o slackline.o
+	$(CC) -o $@ lchat.o slackline.o -ltermlib
 
 lchat.o: lchat.c
 	$(CC) -c $(CFLAGS) -o $@ lchat.c
