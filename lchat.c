@@ -58,7 +58,7 @@ main(void)
 	while ((c = getchar()) != 13) {
 		if (sl_keystroke(sl, c) == -1)
 			errx(EXIT_FAILURE, "sl_keystroke");
-		printf("c: %d: buf: %s\r\n", c, sl->buf);
+		printf("\r\033[2K%s", sl->buf);
 	}
 
 	puts("\r");
