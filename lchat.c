@@ -57,7 +57,8 @@ line_output(struct slackline *sl, char *file)
 static void
 usage(void)
 {
-	fprintf(stderr, "lchar [-nH] [-p prompt] [-i in] [-o out] [directory]\n");
+	fprintf(stderr, "lchar [-nh] [-H lines] [-p prompt] [-i in] [-o out] "
+	    "[directory]\n");
 	exit(EXIT_FAILURE);
 }
 
