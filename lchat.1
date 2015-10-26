@@ -1,0 +1,62 @@
+.Dd $Mdocdate$
+.Dt LCHAT 1
+.Os
+.Sh NAME
+.Nm lchat
+.Nd line chat
+.Sh SYNOPSIS
+.Nm
+.Op Fl nh
+.Op Fl H Ar lines
+.Op Fl p Ar prompt
+.Op Fl i Ar in
+.Op Fl o Ar out
+.Op directory
+.Sh DESCRIPTION
+The
+.Nm
+utility is a command line front end for ii-like chat programs.
+It uses
+.Xr tail
+in the background to get output lines from
+.Ar out .
+
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl n
+Allow to enter empty lines.
+.It Fl h
+Shows usage text.
+.It Fl H Ar lines
+Show
+.Ar lines
+of chat history.
+.It Fl p Ar prompt
+Use
+.Ar prompt
+as prompt for the input line.
+.It Fl i Ar in
+Use path of
+.Ar in
+as in-file.
+Default is 'in'.
+This overides
+.Ar directory .
+.It Fl o Ar out
+Use path of
+.Ar out
+as out-file.
+Default is 'out'.
+This overides
+.Ar directory .
+.It Ar directory
+Uses
+.Ar directory
+to search for in and out file.
+Default directory path is '.'.
+.El
+.Sh SEE ALSO
+.Xr tail 1
+.Sh AUTHORS
+.Nm
+was written by Jan Klemkow.
