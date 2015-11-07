@@ -9,6 +9,7 @@
 .Op Fl nh
 .Op Fl H Ar lines
 .Op Fl p Ar prompt
+.Op Fl t Ar title
 .Op Fl i Ar in
 .Op Fl o Ar out
 .Op directory
@@ -35,6 +36,15 @@ of chat history.
 Use
 .Ar prompt
 as prompt for the input line.
+.It Fl t Ar title
+Use
+.Ar title
+as title terminal window.
+In a
+.Xr tmux 1
+or
+.Xr screen 1
+environment its change the window name instead of the window title.
 .It Fl i Ar in
 Use path of
 .Ar in

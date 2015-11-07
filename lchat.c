@@ -57,8 +57,8 @@ line_output(struct slackline *sl, char *file)
 static void
 usage(void)
 {
-	fprintf(stderr, "lchar [-nh] [-H lines] [-p prompt] [-i in] [-o out] "
-	    "[directory]\n");
+	fprintf(stderr, "lchar [-nh] [-H lines] [-p prompt] [-t title] [-i in]"
+	    " [-o out] [directory]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -81,7 +81,7 @@ main(int argc, char *argv[])
 	char *out_file = NULL;
 	FILE *tail_fh;
 
-	while ((ch = getopt(argc, argv, "H:i:no:p:h")) != -1) {
+	while ((ch = getopt(argc, argv, "H:i:no:p:t:h")) != -1) {
 		switch (ch) {
 		case 'H':
 			errno = 0;
@@ -104,6 +104,12 @@ main(int argc, char *argv[])
 			if ((prompt = strdup(optarg)) == NULL)
 				err(EXIT_FAILURE, "strdup");
 			prompt_len = strlen(prompt);
+			break;
+		case 't':	/* set optarg to terminal's window title */
+			if (strcmp(getenv("TERM"), "screen") == 0)
+				printf("\033k%s\033\\", optarg);
+			else
+				printf("\033]0;%s\a", optarg);
 			break;
 		case 'h':
 		default:
