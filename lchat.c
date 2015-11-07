@@ -73,7 +73,7 @@ main(int argc, char *argv[])
 	int c;
 	int ch;
 	bool empty_line = true;
-	size_t history_len = 0;
+	size_t history_len = 5;
 	char *prompt = ">";
 	size_t prompt_len = strlen(prompt);
 	char *dir = ".";
