@@ -57,7 +57,7 @@ line_output(struct slackline *sl, char *file)
 static void
 usage(void)
 {
-	fprintf(stderr, "lchar [-nh] [-H lines] [-p prompt] [-t title] [-i in]"
+	fprintf(stderr, "lchar [-eh] [-H lines] [-p prompt] [-t title] [-i in]"
 	    " [-o out] [directory]\n");
 	exit(EXIT_FAILURE);
 }
@@ -72,7 +72,7 @@ main(int argc, char *argv[])
 	int fd = STDIN_FILENO;
 	int c;
 	int ch;
-	bool empty_line = true;
+	bool empty_line = false;
 	size_t history_len = 5;
 	char *prompt = ">";
 	size_t prompt_len = strlen(prompt);
@@ -81,7 +81,7 @@ main(int argc, char *argv[])
 	char *out_file = NULL;
 	FILE *tail_fh;
 
-	while ((ch = getopt(argc, argv, "H:i:no:p:t:h")) != -1) {
+	while ((ch = getopt(argc, argv, "H:i:eo:p:t:h")) != -1) {
 		switch (ch) {
 		case 'H':
 			errno = 0;
@@ -93,8 +93,8 @@ main(int argc, char *argv[])
 			if ((in_file = strdup(optarg)) == NULL)
 				err(EXIT_FAILURE, "strdup");
 			break;
-		case 'n':
-			empty_line = false;
+		case 'e':
+			empty_line = true;
 			break;
 		case 'o':
 			if ((out_file = strdup(optarg)) == NULL)
@@ -190,7 +190,7 @@ main(int argc, char *argv[])
 			c = getchar();
 			if (c == 13) {	/* return */
 				if (sl->len == 0 && empty_line == false)
-					continue;
+					goto out;
 				line_output(sl, in_file);
 				sl_reset(sl);
 			}
@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 				err(EXIT_FAILURE, "write");
 			putchar('\a');	/* ring the bell on external input */
 		}
-
+ out:
 		/* show current input line */
 		fputs(prompt, stdout);
 		fputs(sl->buf, stdout);
