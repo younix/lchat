@@ -57,7 +57,7 @@ line_output(struct slackline *sl, char *file)
 static void
 usage(void)
 {
-	fprintf(stderr, "lchar [-eh] [-H lines] [-p prompt] [-t title] [-i in]"
+	fprintf(stderr, "lchar [-eh] [-n lines] [-p prompt] [-t title] [-i in]"
 	    " [-o out] [directory]\n");
 	exit(EXIT_FAILURE);
 }
@@ -81,9 +81,9 @@ main(int argc, char *argv[])
 	char *out_file = NULL;
 	FILE *tail_fh;
 
-	while ((ch = getopt(argc, argv, "H:i:eo:p:t:h")) != -1) {
+	while ((ch = getopt(argc, argv, "n:i:eo:p:t:h")) != -1) {
 		switch (ch) {
-		case 'H':
+		case 'n':
 			errno = 0;
 			history_len = strtoull(optarg, NULL, 0);
 			if (errno != 0)
