@@ -21,6 +21,14 @@ It uses
 .Xr tail
 in the background to get output lines from
 .Ar out .
+.Nm
+locates the
+.Ar in
+and
+.Ar out
+files inside of the
+.Ar directory
+path.
 
 The options are as follows:
 .Bl -tag -width Ds
@@ -50,24 +58,27 @@ Use path of
 .Ar in
 as in-file.
 Default is 'in'.
-This overides
+This overrides
 .Ar directory .
 .It Fl o Ar out
 Use path of
 .Ar out
 as out-file.
 Default is 'out'.
-This overides
+This overrides
 .Ar directory .
 .It Ar directory
 Uses
 .Ar directory
 to search for in and out file.
-Default directory path is '.'.
+Default path is the current working directory.
 .El
 .Sh SEE ALSO
 .Xr tail 1 ,
 .Xr ii 1
 .Sh AUTHORS
+.An -nosplit
+The
 .Nm
-was written by Jan Klemkow.
+program was written by
+.An Jan Klemkow Aq Mt j.klemkow@wemelug.de .
