@@ -84,7 +84,7 @@ main(int argc, char *argv[])
 	int c;
 	int ch;
 	bool empty_line = false;
-	bool bell = true;
+	bool bell_flag = true;
 	size_t history_len = 5;
 	char *prompt = ">";
 	size_t prompt_len = strlen(prompt);
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "an:i:eo:p:t:h")) != -1) {
 		switch (ch) {
 		case 'a':
-			bell = false;
+			bell_flag = false;
 			break;
 		case 'n':
 			errno = 0;
@@ -238,7 +238,7 @@ main(int argc, char *argv[])
 				err(EXIT_FAILURE, "read");
 			if (write(STDOUT_FILENO, buf, n) == -1)
 				err(EXIT_FAILURE, "write");
-			if (bell)	/* ring the bell on external input */
+			if (bell_flag)	/* ring the bell on external input */
 				putchar('\a');
 		}
  out:
