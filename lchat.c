@@ -14,10 +14,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/ioctl.h>
+
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +31,14 @@
 #include "slackline.h"
 
 struct termios origin_term;
+struct winsize winsize;
+
+static void
+sigwinch(int sig)
+{
+	if (sig == SIGWINCH)
+		ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize);
+}
 
 static void
 exit_handler(void)
@@ -76,6 +87,7 @@ main(int argc, char *argv[])
 	size_t history_len = 5;
 	char *prompt = ">";
 	size_t prompt_len = strlen(prompt);
+	size_t loverhang = 0;
 	char *dir = ".";
 	char *in_file = NULL;
 	char *out_file = NULL;
@@ -161,6 +173,10 @@ main(int argc, char *argv[])
 	if (tcsetattr(fd, TCSANOW, &term) == -1)
 		err(EXIT_FAILURE, "tcsetattr");
 
+	/* get the terminal size */
+	sigwinch(SIGWINCH);
+	signal(SIGWINCH, sigwinch);
+
 	setbuf(stdin, NULL);
 	setbuf(stdout, NULL);
 
@@ -181,6 +197,12 @@ main(int argc, char *argv[])
 
 	for (;;) {
 		poll(pfd, 2, INFTIM);
+
+		/* moves cursor back after linewrap */
+		if (loverhang > 0) {
+			fputs("\r\033[2K", stdout);
+			printf("\033[%zuA", loverhang);
+		}
 
 		/* carriage return and erase the whole line */
 		fputs("\r\033[2K", stdout);
@@ -219,11 +241,19 @@ main(int argc, char *argv[])
 		fputs(prompt, stdout);
 		fputs(sl->buf, stdout);
 
+		/* save amount of overhanging lines */
+		loverhang = (prompt_len + sl->len) / winsize.ws_col;
+
+		/* correct line wrap handling */
+		if ((prompt_len + sl->len) > 0 &&
+		    (prompt_len + sl->len) % winsize.ws_col == 0)
+			fputs("\n", stdout);
+
 		if (sl->cur < sl->len) {	/* move the cursor */
 			putchar('\r');
 			/* HACK: because \033[0C does the same as \033[1C */
 			if (sl->cur + prompt_len > 0)
-				printf("\033[%zdC", sl->cur + prompt_len);
+				printf("\033[%zuC", sl->cur + prompt_len);
 		}
 	}
 	return EXIT_SUCCESS;
