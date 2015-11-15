@@ -68,7 +68,7 @@ line_output(struct slackline *sl, char *file)
 static void
 usage(void)
 {
-	fprintf(stderr, "lchar [-eh] [-n lines] [-p prompt] [-t title] [-i in]"
+	fprintf(stderr, "lchar [-aeh] [-n lines] [-p prompt] [-t title] [-i in]"
 	    " [-o out] [directory]\n");
 	exit(EXIT_FAILURE);
 }
@@ -84,6 +84,7 @@ main(int argc, char *argv[])
 	int c;
 	int ch;
 	bool empty_line = false;
+	bool bell = true;
 	size_t history_len = 5;
 	char *prompt = ">";
 	size_t prompt_len = strlen(prompt);
@@ -93,8 +94,11 @@ main(int argc, char *argv[])
 	char *out_file = NULL;
 	FILE *tail_fh;
 
-	while ((ch = getopt(argc, argv, "n:i:eo:p:t:h")) != -1) {
+	while ((ch = getopt(argc, argv, "an:i:eo:p:t:h")) != -1) {
 		switch (ch) {
+		case 'a':
+			bell = false;
+			break;
 		case 'n':
 			errno = 0;
 			history_len = strtoull(optarg, NULL, 0);
@@ -234,7 +238,8 @@ main(int argc, char *argv[])
 				err(EXIT_FAILURE, "read");
 			if (write(STDOUT_FILENO, buf, n) == -1)
 				err(EXIT_FAILURE, "write");
-			putchar('\a');	/* ring the bell on external input */
+			if (bell)	/* ring the bell on external input */
+				putchar('\a');
 		}
  out:
 		/* show current input line */
