@@ -14,3 +14,6 @@ TODO
 
  * support for UTF-8
  * fix: cursor positions in cases of line wrapping
+ * add input history
+ * split slackline as an extra project
+ * add support for vi/emacs mode
