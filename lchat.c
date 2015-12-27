@@ -30,6 +30,10 @@
 
 #include "slackline.h"
 
+#ifndef INFTIM
+#define INFTIM -1
+#endif
+
 struct termios origin_term;
 struct winsize winsize;
 
