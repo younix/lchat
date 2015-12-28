@@ -1,3 +1,5 @@
 *.o
 *.swp
 lchat
+tags
+.bellmatch
