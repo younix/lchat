@@ -8,7 +8,7 @@ clean:
 	rm -f lchat *.o
 
 lchat: lchat.o slackline.o
-	$(CC) -o $@ lchat.o slackline.o -ltermlib
+	$(CC) -o $@ lchat.o slackline.o
 
 lchat.o: lchat.c
 	$(CC) -c $(CFLAGS) -D_BSD_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE \
