@@ -51,6 +51,29 @@ exit_handler(void)
 		err(EXIT_FAILURE, "tcsetattr");
 }
 
+static bool
+bell_match(const char *str, const char *regex_file)
+{
+	FILE *fh = NULL;
+	char cmd[BUFSIZ];
+
+	if (access(regex_file, R_OK) == -1)
+		return true;
+
+	snprintf(cmd, sizeof cmd, "exec grep -qf %s", regex_file);
+
+	if ((fh = popen(cmd, "w")) == NULL)
+		err(EXIT_FAILURE, "popen");
+
+	if (fputs(str, fh) == EOF)
+		err(EXIT_FAILURE, "fputs");
+
+	if (pclose(fh) == 0)
+		return true;
+
+	return false;
+}
+
 static void
 line_output(struct slackline *sl, char *file)
 {
@@ -89,6 +112,7 @@ main(int argc, char *argv[])
 	int ch;
 	bool empty_line = false;
 	bool bell_flag = true;
+	char *bell_file = ".bellmatch";
 	size_t history_len = 5;
 	char *prompt = ">";
 	size_t prompt_len = strlen(prompt);
@@ -242,7 +266,12 @@ main(int argc, char *argv[])
 				err(EXIT_FAILURE, "read");
 			if (write(STDOUT_FILENO, buf, n) == -1)
 				err(EXIT_FAILURE, "write");
-			if (bell_flag)	/* ring the bell on external input */
+
+			/* terminate the input buffer with NUL */
+			buf[n == BUFSIZ ? n - 1 : n] = '\0';
+
+			/* ring the bell on external input */
+			if (bell_flag && bell_match(buf, bell_file))
 				putchar('\a');
 		}
  out:
