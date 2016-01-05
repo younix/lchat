@@ -79,6 +79,11 @@ Default path is the current working directory.
 .Bl -tag -width Ds
 .It .bellmatch
 contains regular expressions that controls bell ring on matching input.
+.It .filter
+If this file exists and has executable permissions, it is used as a filter
+program for the output lines.
+This program should read raw lines from stdin and outputs filtered or
+transformed lines to stdout.
 .El
 .Sh SEE ALSO
 .Xr tail 1 ,

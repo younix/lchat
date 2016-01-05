@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2015-2016 Jan Klemkow <j.klemkow@wemelug.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -215,6 +215,10 @@ main(int argc, char *argv[])
 	/* open external source */
 	snprintf(tail_cmd, sizeof tail_cmd, "exec tail -n %zd -f %s",
 	    history_len, out_file);
+
+	if (access(".filter", X_OK) == 0)
+		strlcat(tail_cmd, " | ./.filter", sizeof tail_cmd);
+
 	if ((tail_fh = popen(tail_cmd, "r")) == NULL)
 		err(EXIT_FAILURE, "unable to open pipe to tail command");
 
