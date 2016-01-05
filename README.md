@@ -9,6 +9,12 @@ output in background.
  [2]: http://ratox.2f30.org/
  [3]: http://23.fi/jj/
 
+Requirements
+------------
+
+ * tail(1)
+ * grep(1)
+
 TODO
 ----
 
