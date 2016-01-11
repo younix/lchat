@@ -49,7 +49,7 @@ as prompt for the input line.
 .It Fl t Ar title
 Use
 .Ar title
-as title terminal window.
+as title for the terminal window.
 In a
 .Xr tmux 1
 or
@@ -84,6 +84,10 @@ If this file exists and has executable permissions, it is used as a filter
 program for the output lines.
 This program should read raw lines from stdin and outputs filtered or
 transformed lines to stdout.
+.It .prompt
+contains the prompt string.
+.It .title
+contains the terminal window title.
 .El
 .Sh SEE ALSO
 .Xr tail 1 ,

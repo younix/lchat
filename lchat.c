@@ -51,6 +51,35 @@ exit_handler(void)
 		err(EXIT_FAILURE, "tcsetattr");
 }
 
+static char *
+read_file_line(const char *file)
+{
+	FILE *fh;
+	char buf[BUFSIZ];
+	char *line = NULL;
+	char *nl = NULL;
+
+	if (access(file, R_OK) == -1)
+		return NULL;
+
+	if ((fh = fopen(file, "r")) == NULL)
+		err(EXIT_FAILURE, "fopen");
+
+	if (fgets(buf, sizeof buf, fh) == NULL)
+		err(EXIT_FAILURE, "fgets");
+
+	if (fclose(fh) == EOF)
+		err(EXIT_FAILURE, "fclose");
+
+	if ((nl = strchr(buf, '\n')) != NULL)	/* delete new line */
+		*nl = '\0';
+
+	if ((line = strdup(buf)) == NULL)
+		err(EXIT_FAILURE ,"strdup");
+
+	return line;
+}
+
 static bool
 bell_match(const char *str, const char *regex_file)
 {
@@ -114,7 +143,12 @@ main(int argc, char *argv[])
 	bool bell_flag = true;
 	char *bell_file = ".bellmatch";
 	size_t history_len = 5;
-	char *prompt = ">";
+	char *prompt = read_file_line(".prompt");
+	char *title = read_file_line(".title");
+
+	if (prompt == NULL)	/* set default prompt */
+		prompt = ">";
+
 	size_t prompt_len = strlen(prompt);
 	size_t loverhang = 0;
 	char *dir = ".";
@@ -149,11 +183,9 @@ main(int argc, char *argv[])
 				err(EXIT_FAILURE, "strdup");
 			prompt_len = strlen(prompt);
 			break;
-		case 't':	/* set optarg to terminal's window title */
-			if (strcmp(getenv("TERM"), "screen") == 0)
-				printf("\033k%s\033\\", optarg);
-			else
-				printf("\033]0;%s\a", optarg);
+		case 't':
+			if ((title = strdup(optarg)) == NULL)
+				err(EXIT_FAILURE, "strdup");
 			break;
 		case 'h':
 		default:
@@ -181,6 +213,14 @@ main(int argc, char *argv[])
 
 	if (isatty(fd) == 0)
 		err(EXIT_FAILURE, "isatty");
+
+	/* set optarg to terminal's window title */
+	if (title != NULL) {
+		if (strcmp(getenv("TERM"), "screen") == 0)
+			printf("\033k%s\033\\", title);
+		else
+			printf("\033]0;%s\a", title);
+	}
 
 	/* preprate terminal reset on exit */
 	if (tcgetattr(fd, &origin_term) == -1)
