@@ -5,6 +5,8 @@ Line chat is the little and small brother of cii.  It is a front end for
 ii-like chat programs.  It uses tail(1) -f to get the chat output in
 background.
 
+![lchat](/lchat.png)
+
  * http://tools.suckless.org/ii/
  * http://ratox.2f30.org/
  * http://github.com/younix/sj/
