@@ -9,7 +9,7 @@ LIBS = -L/usr/local/lib -lutf
 
 all: lchat
 clean:
-	rm -f lchat *.o *.core
+	rm -f lchat *.o *.core sl_test
 
 test: sl_test
 	./sl_test
