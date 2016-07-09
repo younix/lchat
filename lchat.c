@@ -112,9 +112,9 @@ line_output(struct slackline *sl, char *file)
 		err(EXIT_FAILURE, "open: %s", file);
 
 	/* replace NUL-terminator with newline as line separator for file */
-	sl->buf[sl->len] = '\n';
+	sl->buf[sl->blen] = '\n';
 
-	if (write(fd, sl->buf, sl->len + 1) == -1)
+	if (write(fd, sl->buf, sl->blen + 1) == -1)
 		err(EXIT_FAILURE, "write");
 
 	if (close(fd) == -1)
@@ -137,7 +137,7 @@ main(int argc, char *argv[])
 	struct termios term;
 	struct slackline *sl = sl_init();
 	int fd = STDIN_FILENO;
-	int c;
+	char c;
 	int ch;
 	bool empty_line = false;
 	bool bell_flag = true;
@@ -285,15 +285,28 @@ main(int argc, char *argv[])
 
 		/* handle keyboard intput */
 		if (pfd[0].revents & POLLIN) {
-			c = getchar();
-			if (c == 13) {	/* return */
-				if (sl->len == 0 && empty_line == false)
+			ssize_t ret = read(fd, &c, sizeof c);
+
+			if (ret == -1)
+				err(EXIT_FAILURE, "read");
+
+			if (ret == 0)
+				return EXIT_SUCCESS;
+
+			switch (c) {
+			case 4:		/* eot */
+				return EXIT_SUCCESS;
+				break;
+			case 13:	/* return */
+				if (sl->rlen == 0 && empty_line == false)
 					goto out;
 				line_output(sl, in_file);
 				sl_reset(sl);
+				break;
+			default:
+				if (sl_keystroke(sl, c) == -1)
+					errx(EXIT_FAILURE, "sl_keystroke");
 			}
-			if (sl_keystroke(sl, c) == -1)
-				errx(EXIT_FAILURE, "sl_keystroke");
 		}
 
 		/* handle tail command error and its broken pipe */
@@ -324,19 +337,22 @@ main(int argc, char *argv[])
 		fputs(sl->buf, stdout);
 
 		/* save amount of overhanging lines */
-		loverhang = (prompt_len + sl->len) / winsize.ws_col;
+		loverhang = (prompt_len + sl->rlen) / winsize.ws_col;
 
 		/* correct line wrap handling */
-		if ((prompt_len + sl->len) > 0 &&
-		    (prompt_len + sl->len) % winsize.ws_col == 0)
+		if ((prompt_len + sl->rlen) > 0 &&
+		    (prompt_len + sl->rlen) % winsize.ws_col == 0)
 			fputs("\n", stdout);
 
-		if (sl->cur < sl->len) {	/* move the cursor */
+		if (sl->rcur < sl->rlen) {	/* move the cursor */
 			putchar('\r');
 			/* HACK: because \033[0C does the same as \033[1C */
-			if (sl->cur + prompt_len > 0)
-				printf("\033[%zuC", sl->cur + prompt_len);
+			if (sl->rcur + prompt_len > 0)
+				printf("\033[%zuC", sl->rcur + prompt_len);
 		}
+
+		if (fflush(stdout) == EOF)
+			err(EXIT_FAILURE, "fflush");
 	}
 	return EXIT_SUCCESS;
 }

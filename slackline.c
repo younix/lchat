@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2015-2016 Jan Klemkow <j.klemkow@wemelug.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,10 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+
+#include <utf.h>
 
 #include "slackline.h"
 
@@ -35,6 +37,9 @@ sl_init(void)
 		return NULL;
 	}
 
+	memset(sl->ubuf, 0, sizeof(sl->ubuf));
+	sl->ubuf_len = 0;
+
 	sl_reset(sl);
 
 	return sl;
@@ -51,15 +56,58 @@ void
 sl_reset(struct slackline *sl)
 {
 	sl->buf[0] = '\0';
-	sl->len = 0;
-	sl->cur = 0;
+	sl->ptr = sl->buf;
+	sl->last = sl->buf;
+
+	sl->bcur = 0;
+	sl->blen = 0;
+	sl->rcur = 0;
+	sl->rlen = 0;
+
 	sl->esc = ESC_NONE;
+	sl->ubuf_len = 0;
+}
+
+static size_t
+sl_postobyte(struct slackline *sl, size_t pos)
+{
+	char *ptr = &sl->buf[0];
+	size_t byte = 0;
+
+	for (;pos > 0; pos--) {
+		for (size_t i = 0;; i++) {
+			if (fullrune(ptr, i) == 1) {
+				ptr += i;
+				byte += i;
+				break;
+			}
+		}
+	}
+
+	return byte;
+}
+
+static char *
+sl_postoptr(struct slackline *sl, size_t pos)
+{
+	char *ptr = &sl->buf[0];
+
+	for (;pos > 0; pos--) {
+		for (size_t i = 0;; i++) {
+			if (fullrune(ptr, i) == 1) {
+				ptr += i;
+				break;
+			}
+		}
+	}
+
+	return ptr;
 }
 
 int
 sl_keystroke(struct slackline *sl, int key)
 {
-	if (sl == NULL || sl->len < sl->cur)
+	if (sl == NULL || sl->rlen < sl->rcur)
 		return -1;
 
 	/* handle escape sequences */
@@ -75,35 +123,24 @@ sl_keystroke(struct slackline *sl, int key)
 		case 'B':	/* down  */
 			break;
 		case 'C':	/* right */
-			if (sl->cur < sl->len)
-				sl->cur++;
+			if (sl->rcur < sl->rlen)
+				sl->rcur++;
+			sl->bcur = sl_postobyte(sl, sl->rcur);
 			break;
 		case 'D':	/* left */
-			if (sl->cur > 0)
-				sl->cur--;
+			if (sl->rcur > 0)
+				sl->rcur--;
+			sl->bcur = sl_postobyte(sl, sl->rcur);
 			break;
 		case 'H':	/* Home  */
-			sl->cur = 0;
+			sl->bcur = sl->rcur = 0;
 			break;
 		case 'F':	/* End   */
-			sl->cur = sl->len;
+			sl->rcur = sl->rlen;
+			sl->bcur = sl_postobyte(sl, sl->rcur);
 			break;
 		}
 		sl->esc = ESC_NONE;
-		return 0;
-	}
-
-	/* add character to buffer */
-	if (key >= 32 && key < 127) {
-		if (sl->cur < sl->len) {
-			memmove(sl->buf + sl->cur + 1, sl->buf + sl->cur,
-			    sl->len - sl->cur);
-			sl->buf[sl->cur++] = key;
-		} else {
-			sl->buf[sl->cur++] = key;
-			sl->buf[sl->cur] = '\0';
-		}
-		sl->len++;
 		return 0;
 	}
 
@@ -111,19 +148,63 @@ sl_keystroke(struct slackline *sl, int key)
 	switch (key) {
 	case 27:	/* Escape */
 		sl->esc = ESC;
-		break;
+		return 0;
 	case 127:	/* backspace */
 	case 8:		/* backspace */
-		if (sl->cur == 0)
-			break;
-		if (sl->cur < sl->len)
-			memmove(sl->buf + sl->cur - 1, sl->buf + sl->cur,
-			    sl->len - sl->cur);
-		sl->cur--;
-		sl->len--;
-		sl->buf[sl->len] = '\0';
-		break;
+		if (sl->rcur == 0)
+			return 0;
+
+		char *ncur = sl_postoptr(sl, sl->rcur - 1);
+
+		if (sl->rcur < sl->rlen)
+			memmove(ncur, sl->ptr, sl->last - sl->ptr);
+
+		sl->rcur--;
+		sl->rlen--;
+		sl->last -= sl->ptr - ncur;
+		sl->ptr = ncur;
+		sl->bcur = sl_postobyte(sl, sl->rcur);
+		sl->blen = sl_postobyte(sl, sl->rlen);
+		*sl->last = '\0';
+		return 0;
 	}
+
+	/* byte-wise composing of UTF-8 runes */
+	sl->ubuf[sl->ubuf_len++] = key;
+	if (fullrune(sl->ubuf, sl->ubuf_len) == 0)
+		return 0;
+
+	if (sl->blen + sl->ubuf_len >= sl->bufsize) {
+		char *nbuf;
+
+		if ((nbuf = realloc(sl->buf, sl->bufsize * 2)) == NULL)
+			return -1;
+
+		sl->buf = nbuf;
+		sl->bufsize *= 2;
+	}
+
+	/* add character to buffer */
+	if (sl->rcur < sl->rlen) {	/* insert into buffer */
+		char *ncur = sl_postoptr(sl, sl->rcur + 1);
+		char *cur = sl_postoptr(sl, sl->rcur);
+		char *end = sl_postoptr(sl, sl->rlen);
+
+		memmove(ncur, cur, end - cur);
+	}
+
+	memcpy(sl->last, sl->ubuf, sl->ubuf_len);
+
+	sl->ptr  += sl->ubuf_len;
+	sl->last += sl->ubuf_len;
+	sl->bcur += sl->ubuf_len;
+	sl->blen += sl->ubuf_len;
+	sl->ubuf_len = 0;
+
+	sl->rcur++;
+	sl->rlen++;
+
+	*sl->last = '\0';
 
 	return 0;
 }
