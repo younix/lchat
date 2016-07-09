@@ -34,8 +34,8 @@ check_init(struct slackline *sl)
 	assert(sl->ptr == sl->buf);
 	assert(sl->rlen == 0);
 	assert(sl->blen == 0);
-	assert(sl->rcur== 0);
-	assert(sl->bcur== 0);
+	assert(sl->rcur == 0);
+	assert(sl->bcur == 0);
 	assert(sl->last == sl->buf);
 }
 
