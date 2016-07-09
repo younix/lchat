@@ -126,18 +126,22 @@ sl_keystroke(struct slackline *sl, int key)
 			if (sl->rcur < sl->rlen)
 				sl->rcur++;
 			sl->bcur = sl_postobyte(sl, sl->rcur);
+			sl->ptr = sl->buf + sl->bcur;
 			break;
 		case 'D':	/* left */
 			if (sl->rcur > 0)
 				sl->rcur--;
 			sl->bcur = sl_postobyte(sl, sl->rcur);
+			sl->ptr = sl->buf + sl->bcur;
 			break;
 		case 'H':	/* Home  */
 			sl->bcur = sl->rcur = 0;
+			sl->ptr = sl->buf;
 			break;
 		case 'F':	/* End   */
 			sl->rcur = sl->rlen;
 			sl->bcur = sl_postobyte(sl, sl->rcur);
+			sl->ptr = sl->buf + sl->bcur;
 			break;
 		}
 		sl->esc = ESC_NONE;
@@ -161,11 +165,14 @@ sl_keystroke(struct slackline *sl, int key)
 
 		sl->rcur--;
 		sl->rlen--;
-		sl->last -= sl->ptr - ncur;
-		sl->ptr = ncur;
 		sl->bcur = sl_postobyte(sl, sl->rcur);
 		sl->blen = sl_postobyte(sl, sl->rlen);
+
+		sl->last -= sl->ptr - ncur;
 		*sl->last = '\0';
+
+		sl->ptr = ncur;
+
 		return 0;
 	}
 

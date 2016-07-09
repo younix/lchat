@@ -15,11 +15,13 @@ strokes(struct slackline *sl, const char *str)
 static void
 print_state(struct slackline *sl)
 {
-	printf("rcur: %zu bcur: %zu rlen: %zu blen: %zu buf: \"%s\" ",
-	    sl->rcur, sl->bcur, sl->rlen, sl->blen, sl->buf);
+	size_t l = sl->last - sl->buf;
+
+	printf("rcur: %zu bcur: %zu rlen: %zu blen: %zu l: %zu buf: \"%s\" ",
+	    sl->rcur, sl->bcur, sl->rlen, sl->blen,     l, sl->buf);
 
 	for (size_t i = 0; i < strlen(sl->buf); i++)
-		printf("%2x", sl->buf[i]);
+		printf("%X", sl->buf[i] & 0xff);
 
 	putchar('\n');
 }
@@ -65,22 +67,29 @@ check_ascii(struct slackline *sl)
 static void
 check_utf8(struct slackline *sl)
 {
-	            /*  ae   |  oe   |  ue   */
-	strokes(sl, "\xC3\xA4\xC3\xBC\xC3\xB6");
+	            /*   ae  |   oe  |   ue  |   ss  */
+	strokes(sl, "\xC3\xA4\xC3\xBC\xC3\xB6\xC3\x9F");
+	assert(sl->blen == 8);
+	assert(sl->rlen == 4);
+	assert(sl->bcur == 8);
+	assert(sl->rcur == 4);
+	assert(sl->last - sl->buf == sl->blen);
+
+	strokes(sl, "\x08");	/* backspace */
 	assert(sl->blen == 6);
 	assert(sl->rlen == 3);
 	assert(sl->bcur == 6);
 	assert(sl->rcur == 3);
 	assert(sl->last - sl->buf == sl->blen);
 
-	strokes(sl, "\x08");	/* backspace */
-	assert(sl->blen == 4);
-	assert(sl->rlen == 2);
+	strokes(sl, "\x1b[D");	/* left arrow key */
+	assert(sl->blen == 6);
+	assert(sl->rlen == 3);
 	assert(sl->bcur == 4);
 	assert(sl->rcur == 2);
 	assert(sl->last - sl->buf == sl->blen);
 
-	strokes(sl, "\x1b[D");	/* left arrow key */
+	strokes(sl, "\x08");	/* backspace */
 	assert(sl->blen == 4);
 	assert(sl->rlen == 2);
 	assert(sl->bcur == 2);
