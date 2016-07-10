@@ -143,6 +143,20 @@ sl_keystroke(struct slackline *sl, int key)
 			sl->bcur = sl_postobyte(sl, sl->rcur);
 			sl->ptr = sl->buf + sl->bcur;
 			break;
+		case 'P':	/* delete */
+			if (sl->rcur == sl->rlen)
+				break;
+
+			char *ncur = sl_postoptr(sl, sl->rcur + 1);
+
+			memmove(sl->ptr, ncur, sl->last - ncur);
+
+			sl->rlen--;
+			sl->blen = sl_postobyte(sl, sl->rlen);
+
+			sl->last -= ncur - sl->ptr;
+			*sl->last = '\0';
+			break;
 		}
 		sl->esc = ESC_NONE;
 		return 0;
