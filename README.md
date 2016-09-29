@@ -15,6 +15,7 @@ background.
 Requirements
 ------------
 
+ * libutf
  * tail(1)
  * grep(1)
 
