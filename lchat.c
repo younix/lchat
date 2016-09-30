@@ -276,8 +276,8 @@ main(int argc, char *argv[])
 
 		/* moves cursor back after linewrap */
 		if (loverhang > 0) {
-			fputs("\r\033[2K", stdout);
-			printf("\033[%zuA", loverhang);
+			fputs("\r\033[2K", stdout);	/* cr + ... */
+			printf("\033[%zuA", loverhang);	/* x times UP */
 		}
 
 		/* carriage return and erase the whole line */
