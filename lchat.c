@@ -111,10 +111,7 @@ line_output(struct slackline *sl, char *file)
 	if ((fd = open(file, O_WRONLY|O_APPEND)) == -1)
 		err(EXIT_FAILURE, "open: %s", file);
 
-	/* replace NUL-terminator with newline as line separator for file */
-	sl->buf[sl->blen] = '\n';
-
-	if (write(fd, sl->buf, sl->blen + 1) == -1)
+	if (write(fd, sl->buf, sl->blen) == -1)
 		err(EXIT_FAILURE, "write");
 
 	if (close(fd) == -1)
@@ -132,15 +129,16 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	char tail_cmd[BUFSIZ];
 	struct pollfd pfd[2];
 	struct termios term;
 	struct slackline *sl = sl_init();
 	int fd = STDIN_FILENO;
+	int read_fd = 6;
 	char c;
 	int ch;
 	bool empty_line = false;
 	bool bell_flag = true;
+	bool ucspi = false;
 	char *bell_file = ".bellmatch";
 	size_t history_len = 5;
 	char *prompt = read_file_line(".prompt");
@@ -154,9 +152,8 @@ main(int argc, char *argv[])
 	char *dir = ".";
 	char *in_file = NULL;
 	char *out_file = NULL;
-	FILE *tail_fh;
 
-	while ((ch = getopt(argc, argv, "an:i:eo:p:t:h")) != -1) {
+	while ((ch = getopt(argc, argv, "an:i:eo:p:t:uh")) != -1) {
 		switch (ch) {
 		case 'a':
 			bell_flag = false;
@@ -186,6 +183,9 @@ main(int argc, char *argv[])
 		case 't':
 			if ((title = strdup(optarg)) == NULL)
 				err(EXIT_FAILURE, "strdup");
+			break;
+		case 'u':
+			ucspi = true;
 			break;
 		case 'h':
 		default:
@@ -252,20 +252,27 @@ main(int argc, char *argv[])
 	setbuf(stdin, NULL);
 	setbuf(stdout, NULL);
 
-	/* open external source */
-	snprintf(tail_cmd, sizeof tail_cmd, "exec tail -n %zd -f %s",
-	    history_len, out_file);
+	if (!ucspi) {
+		char tail_cmd[BUFSIZ];
+		FILE *fh;
 
-	if (access(".filter", X_OK) == 0)
-		strlcat(tail_cmd, " | ./.filter", sizeof tail_cmd);
+		/* open external source */
+		snprintf(tail_cmd, sizeof tail_cmd, "exec tail -n %zd -f %s",
+		    history_len, out_file);
 
-	if ((tail_fh = popen(tail_cmd, "r")) == NULL)
-		err(EXIT_FAILURE, "unable to open pipe to tail command");
+		if (access(".filter", X_OK) == 0)
+			strlcat(tail_cmd, " | ./.filter", sizeof tail_cmd);
+
+		if ((fh = popen(tail_cmd, "r")) == NULL)
+			err(EXIT_FAILURE, "unable to open pipe to tail");
+
+		read_fd = fileno(fh);
+	}
 
 	pfd[0].fd = fd;
 	pfd[0].events = POLLIN;
 
-	pfd[1].fd = fileno(tail_fh);
+	pfd[1].fd = read_fd;
 	pfd[1].events = POLLIN;
 
 	/* print initial prompt */
@@ -300,7 +307,14 @@ main(int argc, char *argv[])
 			case 13:	/* return */
 				if (sl->rlen == 0 && empty_line == false)
 					goto out;
-				line_output(sl, in_file);
+				/* replace NUL-terminator with newline */
+				sl->buf[sl->blen++] = '\n';
+				if (ucspi) {
+					if (write(7, sl->buf, sl->blen) == -1)
+						err(EXIT_FAILURE, "write");
+				} else {
+					line_output(sl, in_file);
+				}
 				sl_reset(sl);
 				break;
 			default:
@@ -309,16 +323,18 @@ main(int argc, char *argv[])
 			}
 		}
 
-		/* handle tail command error and its broken pipe */
+		/* handle backend error and its broken pipe */
 		if (pfd[1].revents & POLLHUP)
 			break;
+		if (pfd[1].revents & POLLERR || pfd[1].revents & POLLNVAL)
+			errx(EXIT_FAILURE, "backend error");
 
-		/* handle file intput */
+		/* handle backend intput */
 		if (pfd[1].revents & POLLIN) {
 			char buf[BUFSIZ];
 			ssize_t n = read(pfd[1].fd, buf, sizeof buf);
 			if (n == 0)
-				errx(EXIT_FAILURE, "tail command exited");
+				errx(EXIT_FAILURE, "backend exited");
 			if (n == -1)
 				err(EXIT_FAILURE, "read");
 			if (write(STDOUT_FILENO, buf, n) == -1)
