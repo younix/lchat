@@ -121,7 +121,7 @@ line_output(struct slackline *sl, char *file)
 static void
 usage(void)
 {
-	fprintf(stderr, "lchar [-aeh] [-n lines] [-p prompt] [-t title] [-i in]"
+	fprintf(stderr, "lchat [-aeh] [-n lines] [-p prompt] [-t title] [-i in]"
 	    " [-o out] [directory]\n");
 	exit(EXIT_FAILURE);
 }
@@ -329,7 +329,7 @@ main(int argc, char *argv[])
 		if (pfd[1].revents & POLLERR || pfd[1].revents & POLLNVAL)
 			errx(EXIT_FAILURE, "backend error");
 
-		/* handle backend intput */
+		/* handle backend input */
 		if (pfd[1].revents & POLLIN) {
 			char buf[BUFSIZ];
 			ssize_t n = read(pfd[1].fd, buf, sizeof buf);
