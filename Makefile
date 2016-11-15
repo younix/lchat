@@ -24,6 +24,9 @@ lchat.o: lchat.c
 	$(CC) -c $(CFLAGS) -D_BSD_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE \
 	    -o $@ lchat.c
 
+filter/indent: filter/indent.c
+	$(CC) $(CFLAGS) -o $@ filter/indent.c
+
 sl_test.o: sl_test.c slackline.h
 	$(CC) $(CFLAGS) -c -o $@ sl_test.c
 
