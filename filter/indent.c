@@ -18,6 +18,7 @@ main(int argc, char *argv[])
 
 		if (next == NULL || next[0] == '-') {
 			fputs(buf, stdout);
+			fflush(stdout);
 			continue;
 		}
 
@@ -43,6 +44,7 @@ main(int argc, char *argv[])
 
 			fputc(' ', stdout);
 			fputs(word, stdout);
+			fflush(stdout);
 		}
 	}
 
