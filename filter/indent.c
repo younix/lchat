@@ -9,7 +9,7 @@ main(int argc, char *argv[])
 {
 	char buf[BUFSIZ];
 	char timestr[BUFSIZ];
-	char *fmt = "%H:%m";
+	char *fmt = "%H:%M";
 	char *next, *nick, *word;
 	struct tm tm;
 
