@@ -9,7 +9,7 @@ LIBS = -L/usr/local/lib -lutf
 
 all: lchat
 clean:
-	rm -f lchat *.o *.core sl_test
+	rm -f lchat *.o *.core sl_test filter/indent
 
 test: sl_test
 	./sl_test
