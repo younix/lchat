@@ -119,6 +119,45 @@ line_output(struct slackline *sl, char *file)
 }
 
 static void
+fork_filter(int *read, int *write)
+{
+	int fds_read[2];	/* .filter -> lchat */
+	int fds_write[2];	/* lchat -> .filter */
+
+	if (pipe(fds_read) == -1)
+		err(EXIT_FAILURE, "pipe");
+	if (pipe(fds_write) == -1)
+		err(EXIT_FAILURE, "pipe");
+
+	switch (fork()) {
+	case -1:
+		err(EXIT_FAILURE, "fork of .filter");
+	case 0:	/* child */
+		if (dup2(fds_read[1], STDOUT_FILENO) == -1)
+			err(EXIT_FAILURE, "dup2");
+		if (dup2(fds_write[0], STDIN_FILENO) == -1)
+			err(EXIT_FAILURE, "dup2");
+
+		if (close(fds_read[0]) == -1)
+			err(EXIT_FAILURE, "close");
+		if (close(fds_write[1]) == -1)
+			err(EXIT_FAILURE, "close");
+
+		execl("./.filter", "./.filter", NULL);
+		err(EXIT_FAILURE, "exec of .filter");
+	}
+
+	/* parent */
+	if (close(fds_read[1]) == -1)
+		err(EXIT_FAILURE, "close");
+	if (close(fds_write[0]) == -1)
+		err(EXIT_FAILURE, "close");
+
+	*read = fds_read[0];
+	*write = fds_write[1];
+}
+
+static void
 usage(void)
 {
 	fprintf(stderr, "lchat [-aeh] [-n lines] [-p prompt] [-t title] [-i in]"
@@ -129,11 +168,13 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
-	struct pollfd pfd[2];
+	struct pollfd pfd[3];
 	struct termios term;
 	struct slackline *sl = sl_init();
 	int fd = STDIN_FILENO;
 	int read_fd = 6;
+	int read_filter = -1;
+	int backend_sink = STDOUT_FILENO;
 	char c;
 	int ch;
 	bool empty_line = false;
@@ -260,14 +301,13 @@ main(int argc, char *argv[])
 		snprintf(tail_cmd, sizeof tail_cmd, "exec tail -n %zd -f %s",
 		    history_len, out_file);
 
-		if (access(".filter", X_OK) == 0)
-			strlcat(tail_cmd, " | ./.filter", sizeof tail_cmd);
-
 		if ((fh = popen(tail_cmd, "r")) == NULL)
 			err(EXIT_FAILURE, "unable to open pipe to tail");
 
 		read_fd = fileno(fh);
 	}
+
+	int nfds = 2;
 
 	pfd[0].fd = fd;
 	pfd[0].events = POLLIN;
@@ -275,12 +315,21 @@ main(int argc, char *argv[])
 	pfd[1].fd = read_fd;
 	pfd[1].events = POLLIN;
 
+	if (access(".filter", X_OK) == 0) {
+		fork_filter(&read_filter, &backend_sink);
+
+		pfd[2].fd = read_filter;
+		pfd[2].events = POLLIN;
+
+		nfds = 3;
+	}
+
 	/* print initial prompt */
 	fputs(prompt, stdout);
 
 	for (;;) {
 		errno = 0;
-		if (poll(pfd, 2, INFTIM) == -1 && errno != EINTR)
+		if (poll(pfd, nfds, INFTIM) == -1 && errno != EINTR)
 			err(EXIT_FAILURE, "poll");
 
 		/* moves cursor back after linewrap */
@@ -338,7 +387,7 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "backend exited");
 			if (n == -1)
 				err(EXIT_FAILURE, "read");
-			if (write(STDOUT_FILENO, buf, n) == -1)
+			if (write(backend_sink, buf, n) == -1)
 				err(EXIT_FAILURE, "write");
 
 			/* terminate the input buffer with NUL */
@@ -347,6 +396,28 @@ main(int argc, char *argv[])
 			/* ring the bell on external input */
 			if (bell_flag && bell_match(buf, bell_file))
 				putchar('\a');
+		}
+
+		/* handel optional .filter i/o */
+		if (nfds > 2) {
+			/* handle .filter error and its broken pipe */
+			if (pfd[2].revents & POLLHUP)
+				break;
+			if (pfd[2].revents & POLLERR ||
+			    pfd[2].revents & POLLNVAL)
+				errx(EXIT_FAILURE, ".filter error");
+
+			/* handle .filter output */
+			if (pfd[2].revents & POLLIN) {
+				char buf[BUFSIZ];
+				ssize_t n = read(pfd[2].fd, buf, sizeof buf);
+				if (n == 0)
+					errx(EXIT_FAILURE, ".filter exited");
+				if (n == -1)
+					err(EXIT_FAILURE, "read");
+				if (write(STDOUT_FILENO, buf, n) == -1)
+					err(EXIT_FAILURE, "write");
+			}
 		}
  out:
 		/* show current input line */
