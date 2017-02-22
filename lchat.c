@@ -304,7 +304,6 @@ main(int argc, char *argv[])
 			switch (c) {
 			case 4:		/* eot */
 				return EXIT_SUCCESS;
-				break;
 			case 13:	/* return */
 				if (sl->rlen == 0 && empty_line == false)
 					goto out;
