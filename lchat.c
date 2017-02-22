@@ -279,7 +279,8 @@ main(int argc, char *argv[])
 	fputs(prompt, stdout);
 
 	for (;;) {
-		if (poll(pfd, 2, INFTIM) == -1)
+		errno = 0;
+		if (poll(pfd, 2, INFTIM) == -1 && errno != EINTR)
 			err(EXIT_FAILURE, "poll");
 
 		/* moves cursor back after linewrap */
