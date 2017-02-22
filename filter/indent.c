@@ -6,6 +6,9 @@
 #include <time.h>
 #include <unistd.h>
 
+#define color1 34
+#define color2 36
+
 int
 main(void)
 {
@@ -16,6 +19,7 @@ main(void)
 	char *next, *nick, *word;
 	struct tm tm;
 	int cols = 80;		/* terminal width */
+	int color = color1;
 
 	while (fgets(buf, sizeof buf, stdin) != NULL) {
 		next = strptime(buf, "%Y-%m-%d %H:%M ", &tm);
@@ -32,9 +36,13 @@ main(void)
 
 		strftime(timestr, sizeof timestr, fmt, &tm);
 
+		/* swap color */
+		if (strcmp(nick, old_nick) != 0)
+			color = color == color1 ? color2 : color1;
+
 		/* print prompt */
 		/* HH:MM nnnnnnnnnnnn ttttttttttttt */
-		printf("%s %*s", timestr, 12,
+		printf("\033[%dm%s %*s", color, timestr, 12,
 		    strcmp(nick, old_nick) == 0 ? "" : nick);
 
 		strlcpy(old_nick, nick, sizeof old_nick);
@@ -56,7 +64,7 @@ main(void)
 			fputs(word, stdout);
 			first = false;
 		}
-
+		fputs("\033[0m", stdout);	/* turn color off */
 		fflush(stdout);
 	}
 
