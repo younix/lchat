@@ -207,14 +207,14 @@ sl_keystroke(struct slackline *sl, int key)
 
 	/* add character to buffer */
 	if (sl->rcur < sl->rlen) {	/* insert into buffer */
-		char *ncur = sl_postoptr(sl, sl->rcur + 1);
 		char *cur = sl_postoptr(sl, sl->rcur);
 		char *end = sl_postoptr(sl, sl->rlen);
+		char *ncur = cur + sl->ubuf_len;
 
 		memmove(ncur, cur, end - cur);
 	}
 
-	memcpy(sl->last, sl->ubuf, sl->ubuf_len);
+	memcpy(sl_postoptr(sl, sl->rcur), sl->ubuf, sl->ubuf_len);
 
 	sl->ptr  += sl->ubuf_len;
 	sl->last += sl->ubuf_len;
