@@ -157,9 +157,39 @@ sl_keystroke(struct slackline *sl, int key)
 			sl->last -= ncur - sl->ptr;
 			*sl->last = '\0';
 			break;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			sl->nummod = key;
+			sl->esc = ESC_BRACKET_NUM;
+			return 0;
 		}
 		sl->esc = ESC_NONE;
 		return 0;
+	case ESC_BRACKET_NUM:
+		switch(key) {
+		case '~':
+			switch(sl->nummod) {
+			case '7':
+				sl->bcur = sl->rcur = 0;
+				sl->ptr = sl->buf;
+				break;
+			case '8':
+				sl->rcur = sl->rlen;
+				sl->bcur = sl_postobyte(sl, sl->rcur);
+				sl->ptr = sl->buf + sl->bcur;
+				break;
+			}
+			sl->esc = ESC_NONE;
+			return 0;
+		}
 	}
 
 	/* handle ctl keys */
@@ -187,6 +217,9 @@ sl_keystroke(struct slackline *sl, int key)
 
 		sl->ptr = ncur;
 
+		return 0;
+	case 21: /* ctrl+u or clearline, weird that it's a NAK */
+		sl_reset(sl);
 		return 0;
 	}
 

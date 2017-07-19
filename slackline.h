@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-enum esc_seq {ESC_NONE, ESC, ESC_BRACKET};
+enum esc_seq {ESC_NONE, ESC, ESC_BRACKET, ESC_BRACKET_NUM};
 
 struct slackline {
 	/* buffer */
@@ -21,6 +21,7 @@ struct slackline {
 	size_t rlen;	/* amount of runes */
 
 	enum esc_seq esc;
+	char nummod;
 
 	/* UTF-8 handling */
 	char ubuf[6];	/* UTF-8 buffer */
