@@ -157,9 +157,39 @@ sl_keystroke(struct slackline *sl, int key)
 			sl->last -= ncur - sl->ptr;
 			*sl->last = '\0';
 			break;
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			sl->nummod = key;
+			sl->esc = ESC_BRACKET_NUM;
+			return 0;
 		}
 		sl->esc = ESC_NONE;
 		return 0;
+	case ESC_BRACKET_NUM:
+		switch(key) {
+		case '~':
+			switch(sl->nummod) {
+			case '7':
+				sl->bcur = sl->rcur = 0;
+				sl->ptr = sl->buf;
+				break;
+			case '8':
+				sl->rcur = sl->rlen;
+				sl->bcur = sl_postobyte(sl, sl->rcur);
+				sl->ptr = sl->buf + sl->bcur;
+				break;
+			}
+			sl->esc = ESC_NONE;
+			return 0;
+		}
 	}
 
 	/* handle ctl keys */
@@ -188,6 +218,9 @@ sl_keystroke(struct slackline *sl, int key)
 		sl->ptr = ncur;
 
 		return 0;
+	case 21: /* ctrl+u or clearline, weird that it's a NAK */
+		sl_reset(sl);
+		return 0;
 	}
 
 	/* byte-wise composing of UTF-8 runes */
@@ -207,14 +240,14 @@ sl_keystroke(struct slackline *sl, int key)
 
 	/* add character to buffer */
 	if (sl->rcur < sl->rlen) {	/* insert into buffer */
-		char *ncur = sl_postoptr(sl, sl->rcur + 1);
 		char *cur = sl_postoptr(sl, sl->rcur);
 		char *end = sl_postoptr(sl, sl->rlen);
+		char *ncur = cur + sl->ubuf_len;
 
 		memmove(ncur, cur, end - cur);
 	}
 
-	memcpy(sl->last, sl->ubuf, sl->ubuf_len);
+	memcpy(sl_postoptr(sl, sl->rcur), sl->ubuf, sl->ubuf_len);
 
 	sl->ptr  += sl->ubuf_len;
 	sl->last += sl->ubuf_len;
