@@ -33,7 +33,7 @@ main(void)
 		}
 
 		nick = strsep(&next, ">");
-		nick++;				/* skip '>'   */
+		nick++;				/* skip '<'   */
 		next++;				/* skip space */
 
 		strftime(timestr, sizeof timestr, fmt, tm);
