@@ -19,6 +19,8 @@
 #include <err.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
+#include <limits.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
@@ -255,13 +257,18 @@ main(int argc, char *argv[])
 	if (isatty(fd) == 0)
 		err(EXIT_FAILURE, "isatty");
 
-	/* set optarg to terminal's window title */
-	if (title != NULL) {
-		if (strcmp(getenv("TERM"), "screen") == 0)
-			printf("\033k%s\033\\", title);
-		else
-			printf("\033]0;%s\a", title);
+	/* set terminal's window title */
+	if (title == NULL) {
+		char path[PATH_MAX];
+		if (getcwd(path, sizeof path) == NULL)
+			err(EXIT_FAILURE, "getcwd");
+		if ((title = basename(path)) == NULL)
+			err(EXIT_FAILURE, "basename");
 	}
+	if (strcmp(getenv("TERM"), "screen") == 0)
+		printf("\033k%s\033\\", title);
+	else
+		printf("\033]0;%s\a", title);
 
 	/* preprate terminal reset on exit */
 	if (tcgetattr(fd, &origin_term) == -1)
