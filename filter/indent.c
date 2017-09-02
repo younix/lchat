@@ -17,24 +17,26 @@ main(void)
 	char old_nick[BUFSIZ] = "";
 	char *fmt = "%H:%M";
 	char *next, *nick, *word;
-	struct tm tm;
 	int cols = 80;		/* terminal width */
 	int color = color1;
 
 	while (fgets(buf, sizeof buf, stdin) != NULL) {
-		next = strptime(buf, "%Y-%m-%d %H:%M ", &tm);
+		time_t time = strtol(buf, &next, 10);
+		struct tm *tm = localtime(&time);
 
-		if (next == NULL || next[0] == '-') {
+		next++;				/* skip space */
+
+		if (next == NULL || next[0] == '-' || time == 0) {
 			fputs(buf, stdout);
 			fflush(stdout);
 			continue;
 		}
 
 		nick = strsep(&next, ">");
-		nick++;
-		next++;
+		nick++;				/* skip '>'   */
+		next++;				/* skip space */
 
-		strftime(timestr, sizeof timestr, fmt, &tm);
+		strftime(timestr, sizeof timestr, fmt, tm);
 
 		/* swap color */
 		if (strcmp(nick, old_nick) != 0)
