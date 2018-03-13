@@ -6,8 +6,11 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "../util.h"
+
 #define color1 34
 #define color2 33
+#define color3 35
 
 int
 main(void)
@@ -19,6 +22,7 @@ main(void)
 	char *next, *nick, *word;
 	int cols = 80;		/* terminal width */
 	int color = color1;
+	char *bell_file = ".bellmatch";
 
 	while (fgets(buf, sizeof buf, stdin) != NULL) {
 		time_t time = strtol(buf, &next, 10);
@@ -41,6 +45,9 @@ main(void)
 		/* swap color */
 		if (strcmp(nick, old_nick) != 0)
 			color = color == color1 ? color2 : color1;
+
+		if (access(bell_file, R_OK) == 0 && bell_match(next, bell_file))
+			color = color3;
 
 		/* print prompt */
 		/* HH:MM nnnnnnnnnnnn ttttttttttttt */

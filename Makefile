@@ -1,4 +1,4 @@
-include config.mk
+#include config.mk
 
 .PHONY: all install filter clean test
 
@@ -21,8 +21,8 @@ lchat.o: lchat.c
 	    -o $@ lchat.c
 
 filter: filter/indent
-filter/indent: filter/indent.c
-	$(CC) $(CFLAGS) -o $@ filter/indent.c
+filter/indent: filter/indent.c util.o util.h
+	$(CC) $(CFLAGS) -o $@ filter/indent.c util.o
 
 sl_test.o: sl_test.c slackline.h
 	$(CC) $(CFLAGS) -c -o $@ sl_test.c
@@ -32,3 +32,6 @@ sl_test: sl_test.o slackline.o slackline.h
 
 slackline.o: slackline.c slackline.h
 	$(CC) -c $(CFLAGS) -o $@ slackline.c
+
+util.o: util.c util.h
+	$(CC) -c $(CFLAGS) -o $@ util.c
