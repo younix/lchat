@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #define color1 34
-#define color2 36
+#define color2 33
 
 int
 main(void)
@@ -44,7 +44,8 @@ main(void)
 
 		/* print prompt */
 		/* HH:MM nnnnnnnnnnnn ttttttttttttt */
-		printf("\033[%dm%s %*s", color, timestr, 12,
+		// e[7;30;40m
+		printf("\033[1;%dm\033[K%s %*s", color, timestr, 12,
 		    strcmp(nick, old_nick) == 0 ? "" : nick);
 
 		strlcpy(old_nick, nick, sizeof old_nick);
@@ -66,7 +67,7 @@ main(void)
 			fputs(word, stdout);
 			first = false;
 		}
-		fputs("\033[0m", stdout);	/* turn color off */
+		fputs("\033[0m\033[K", stdout);	/* turn color off */
 		fflush(stdout);
 	}
 
