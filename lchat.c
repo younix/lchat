@@ -162,8 +162,8 @@ fork_filter(int *read, int *write)
 static void
 usage(void)
 {
-	fprintf(stderr, "lchat [-aeh] [-n lines] [-p prompt] [-t title] [-i in]"
-	    " [-o out] [directory]\n");
+	fputs("lchat [-aeh] [-n lines] [-p prompt] [-t title] [-i in] [-o out]"
+	    " [directory]\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
