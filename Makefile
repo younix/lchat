@@ -1,4 +1,4 @@
-#include config.mk
+include config.mk
 
 .PHONY: all install filter clean test
 
