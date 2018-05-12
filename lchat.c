@@ -188,7 +188,7 @@ main(int argc, char *argv[])
 	char *title = read_file_line(".title");
 
 	if (prompt == NULL)	/* set default prompt */
-		prompt = ">";
+		prompt = "> ";
 
 	size_t prompt_len = strlen(prompt);
 	size_t loverhang = 0;
