@@ -37,6 +37,11 @@ main(void)
 		}
 
 		nick = strsep(&next, ">");
+		if (next == NULL) {
+			fputs(buf, stdout);
+			fflush(stdout);
+			continue;
+		}
 		nick++;				/* skip '<'   */
 		next++;				/* skip space */
 
