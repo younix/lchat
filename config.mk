@@ -10,3 +10,7 @@ CFLAGS = -std=c99 -pedantic -Wall -Wextra -g
 # utf.h
 CFLAGS += -I/usr/local/include
 LIBS = -L/usr/local/lib -lutf
+
+# For sbase users:
+#CFLAGS += -I../sbase
+#LIBS = -L../sbase -lutf
