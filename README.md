@@ -2,9 +2,13 @@ line chat
 =========
 
 lchat (line chat) is a line oriented front end for for ii-like chat programs.
-It uses tail(1) -f to get the chat output in background.
+It handles the input from keyboard and output file in parallel.  Thus, you are
+able to type new messages while new chat lines arriving.  Its main focus is on
+usability and simplicity.
 
 ![lchat](/lchat.png)
+
+Programs you can use lchat as a front end for:
 
  * http://tools.suckless.org/ii/
  * http://ratox.2f30.org/
