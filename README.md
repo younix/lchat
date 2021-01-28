@@ -18,7 +18,7 @@ Programs you can use lchat as a front end for:
 Requirements
 ------------
 
- * libutf
+ * [libutf](https://git.suckless.org/sbase)
  * tail(1)
  * grep(1)
 
