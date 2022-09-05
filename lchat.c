@@ -335,6 +335,9 @@ main(int argc, char *argv[])
 	fputs(prompt, stdout);
 
 	for (;;) {
+		if (fflush(stdout) == EOF)
+			err(EXIT_FAILURE, "fflush");
+
 		errno = 0;
 		if (poll(pfd, nfds, INFTIM) == -1 && errno != EINTR)
 			err(EXIT_FAILURE, "poll");
@@ -445,9 +448,6 @@ main(int argc, char *argv[])
 			if (sl->rcur + prompt_len > 0)
 				printf("\033[%zuC", sl->rcur + prompt_len);
 		}
-
-		if (fflush(stdout) == EOF)
-			err(EXIT_FAILURE, "fflush");
 	}
 	return EXIT_SUCCESS;
 }
