@@ -13,8 +13,8 @@ install: lchat
 test: sl_test
 	./sl_test
 
-lchat: lchat.o slackline.o
-	$(CC) -o $@ lchat.o slackline.o $(LIBS)
+lchat: lchat.o slackline.o util.o
+	$(CC) -o $@ lchat.o slackline.o util.o $(LIBS)
 
 lchat.o: lchat.c
 	$(CC) -c $(CFLAGS) -D_BSD_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE \
@@ -34,4 +34,4 @@ slackline.o: slackline.c slackline.h
 	$(CC) -c $(CFLAGS) -o $@ slackline.c
 
 util.o: util.c util.h
-	$(CC) -c $(CFLAGS) -o $@ util.c
+	$(CC) -c $(CFLAGS) -D_BSD_SOURCE -o $@ util.c
