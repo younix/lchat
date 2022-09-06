@@ -14,11 +14,31 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <err.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+
+void
+die(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+
+	if (fmt[0] && fmt[strlen(fmt)-1] == ':') {
+		fputc(' ', stderr);
+		perror(NULL);
+	} else {
+		fputc('\n', stderr);
+	}
+
+	exit(EXIT_FAILURE);
+}
 
 bool
 bell_match(const char *str, const char *regex_file)
@@ -32,10 +52,10 @@ bell_match(const char *str, const char *regex_file)
 	snprintf(cmd, sizeof cmd, "exec grep -qf %s", regex_file);
 
 	if ((fh = popen(cmd, "w")) == NULL)
-		err(EXIT_FAILURE, "popen");
+		die("popen:");
 
 	if (fputs(str, fh) == EOF)
-		err(EXIT_FAILURE, "fputs");
+		die("fputs:");
 
 	if (pclose(fh) == 0)
 		return true;

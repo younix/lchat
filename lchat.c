@@ -16,7 +16,6 @@
 
 #include <sys/ioctl.h>
 
-#include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
@@ -51,7 +50,7 @@ static void
 exit_handler(void)
 {
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &origin_term) == -1)
-		err(EXIT_FAILURE, "tcsetattr");
+		die("tcsetattr:");
 }
 
 static char *
@@ -66,19 +65,19 @@ read_file_line(const char *file)
 		return NULL;
 
 	if ((fh = fopen(file, "r")) == NULL)
-		err(EXIT_FAILURE, "fopen");
+		die("fopen:");
 
 	if (fgets(buf, sizeof buf, fh) == NULL)
-		err(EXIT_FAILURE, "fgets");
+		die("fgets:");
 
 	if (fclose(fh) == EOF)
-		err(EXIT_FAILURE, "fclose");
+		die("fclose:");
 
 	if ((nl = strchr(buf, '\n')) != NULL)	/* delete new line */
 		*nl = '\0';
 
 	if ((line = strdup(buf)) == NULL)
-		err(EXIT_FAILURE ,"strdup");
+		die("strdup:");
 
 	return line;
 }
@@ -89,13 +88,13 @@ line_output(struct slackline *sl, char *file)
 	int fd;
 
 	if ((fd = open(file, O_WRONLY|O_APPEND)) == -1)
-		err(EXIT_FAILURE, "open: %s", file);
+		die("open: %s:", file);
 
 	if (write(fd, sl->buf, sl->blen) == -1)
-		err(EXIT_FAILURE, "write");
+		die("write:");
 
 	if (close(fd) == -1)
-		err(EXIT_FAILURE, "close");
+		die("close:");
 }
 
 static void
@@ -105,33 +104,34 @@ fork_filter(int *read, int *write)
 	int fds_write[2];	/* lchat -> .filter */
 
 	if (pipe(fds_read) == -1)
-		err(EXIT_FAILURE, "pipe");
+		die("pipe:");
 	if (pipe(fds_write) == -1)
-		err(EXIT_FAILURE, "pipe");
+		die("pipe:");
 
 	switch (fork()) {
 	case -1:
-		err(EXIT_FAILURE, "fork of .filter");
+		die("fork of .filter");
+		break;
 	case 0:	/* child */
 		if (dup2(fds_read[1], STDOUT_FILENO) == -1)
-			err(EXIT_FAILURE, "dup2");
+			die("dup2:");
 		if (dup2(fds_write[0], STDIN_FILENO) == -1)
-			err(EXIT_FAILURE, "dup2");
+			die("dup2:");
 
 		if (close(fds_read[0]) == -1)
-			err(EXIT_FAILURE, "close");
+			die("close:");
 		if (close(fds_write[1]) == -1)
-			err(EXIT_FAILURE, "close");
+			die("close:");
 
 		execl("./.filter", "./.filter", NULL);
-		err(EXIT_FAILURE, "exec of .filter");
+		die("exec of .filter");
 	}
 
 	/* parent */
 	if (close(fds_read[1]) == -1)
-		err(EXIT_FAILURE, "close");
+		die("close:");
 	if (close(fds_write[0]) == -1)
-		err(EXIT_FAILURE, "close");
+		die("close:");
 
 	*read = fds_read[0];
 	*write = fds_write[1];
@@ -183,27 +183,27 @@ main(int argc, char *argv[])
 			errno = 0;
 			history_len = strtoull(optarg, NULL, 0);
 			if (errno != 0)
-				err(EXIT_FAILURE, "strtoull");
+				die("strtoull:");
 			break;
 		case 'i':
 			if ((in_file = strdup(optarg)) == NULL)
-				err(EXIT_FAILURE, "strdup");
+				die("strdup:");
 			break;
 		case 'e':
 			empty_line = true;
 			break;
 		case 'o':
 			if ((out_file = strdup(optarg)) == NULL)
-				err(EXIT_FAILURE, "strdup");
+				die("strdup:");
 			break;
 		case 'p':
 			if ((prompt = strdup(optarg)) == NULL)
-				err(EXIT_FAILURE, "strdup");
+				die("strdup:");
 			prompt_len = strlen(prompt);
 			break;
 		case 't':
 			if ((title = strdup(optarg)) == NULL)
-				err(EXIT_FAILURE, "strdup");
+				die("strdup:");
 			break;
 		case 'u':
 			ucspi = true;
@@ -222,26 +222,26 @@ main(int argc, char *argv[])
 
 	if (argc == 1)
 		if ((dir = strdup(argv[0])) == NULL)
-			err(EXIT_FAILURE, "strdup");
+			die("strdup:");
 
 	if (in_file == NULL)
 		if (asprintf(&in_file, "%s/in", dir) == -1)
-			err(EXIT_FAILURE, "asprintf");
+			die("asprintf:");
 
 	if (out_file == NULL)
 		if (asprintf(&out_file, "%s/out", dir) == -1)
-			err(EXIT_FAILURE, "asprintf");
+			die("asprintf:");
 
 	if (isatty(fd) == 0)
-		err(EXIT_FAILURE, "isatty");
+		die("isatty:");
 
 	/* set terminal's window title */
 	if (title == NULL) {
 		char path[PATH_MAX];
 		if (getcwd(path, sizeof path) == NULL)
-			err(EXIT_FAILURE, "getcwd");
+			die("getcwd:");
 		if ((title = basename(path)) == NULL)
-			err(EXIT_FAILURE, "basename");
+			die("basename:");
 	}
 	if (strcmp(getenv("TERM"), "screen") == 0)
 		printf("\033k%s\033\\", title);
@@ -250,14 +250,14 @@ main(int argc, char *argv[])
 
 	/* preprate terminal reset on exit */
 	if (tcgetattr(fd, &origin_term) == -1)
-		err(EXIT_FAILURE, "tcgetattr");
+		die("tcgetattr:");
 
 	if (atexit(exit_handler) == -1)
-		err(EXIT_FAILURE, "atexit");
+		die("atexit:");
 
 	/* prepare terminal */
 	if (tcgetattr(fd, &term) == -1)
-		err(EXIT_FAILURE, "tcgetattr");
+		die("tcgetattr:");
 
 	/* TODO: clean up this block.  copied from cfmakeraw(3) */
 	term.c_iflag &= ~(IMAXBEL|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
@@ -269,7 +269,7 @@ main(int argc, char *argv[])
 	term.c_cc[VTIME] = 0;
 
 	if (tcsetattr(fd, TCSANOW, &term) == -1)
-		err(EXIT_FAILURE, "tcsetattr");
+		die("tcsetattr:");
 
 	/* get the terminal size */
 	sigwinch(SIGWINCH);
@@ -287,7 +287,7 @@ main(int argc, char *argv[])
 		    history_len, out_file);
 
 		if ((fh = popen(tail_cmd, "r")) == NULL)
-			err(EXIT_FAILURE, "unable to open pipe to tail");
+			die("unable to open pipe to tail:");
 
 		read_fd = fileno(fh);
 	}
@@ -314,11 +314,11 @@ main(int argc, char *argv[])
 
 	for (;;) {
 		if (fflush(stdout) == EOF)
-			err(EXIT_FAILURE, "fflush");
+			die("fflush:");
 
 		errno = 0;
 		if (poll(pfd, nfds, INFTIM) == -1 && errno != EINTR)
-			err(EXIT_FAILURE, "poll");
+			die("poll:");
 
 		/* moves cursor back after linewrap */
 		if (loverhang > 0) {
@@ -334,7 +334,7 @@ main(int argc, char *argv[])
 			ssize_t ret = read(fd, &c, sizeof c);
 
 			if (ret == -1)
-				err(EXIT_FAILURE, "read");
+				die("read:");
 
 			if (ret == 0)
 				return EXIT_SUCCESS;
@@ -349,7 +349,7 @@ main(int argc, char *argv[])
 				sl->buf[sl->blen++] = '\n';
 				if (ucspi) {
 					if (write(7, sl->buf, sl->blen) == -1)
-						err(EXIT_FAILURE, "write");
+						die("write:");
 				} else {
 					line_output(sl, in_file);
 				}
@@ -357,7 +357,7 @@ main(int argc, char *argv[])
 				break;
 			default:
 				if (sl_keystroke(sl, c) == -1)
-					errx(EXIT_FAILURE, "sl_keystroke");
+					die("sl_keystroke");
 			}
 		}
 
@@ -365,18 +365,18 @@ main(int argc, char *argv[])
 		if (pfd[1].revents & POLLHUP)
 			break;
 		if (pfd[1].revents & POLLERR || pfd[1].revents & POLLNVAL)
-			errx(EXIT_FAILURE, "backend error");
+			die("backend error");
 
 		/* handle backend input */
 		if (pfd[1].revents & POLLIN) {
 			char buf[BUFSIZ];
 			ssize_t n = read(pfd[1].fd, buf, sizeof buf);
 			if (n == 0)
-				errx(EXIT_FAILURE, "backend exited");
+				die("backend exited");
 			if (n == -1)
-				err(EXIT_FAILURE, "read");
+				die("read:");
 			if (write(backend_sink, buf, n) == -1)
-				err(EXIT_FAILURE, "write");
+				die("write:");
 
 			/* terminate the input buffer with NUL */
 			buf[n == BUFSIZ ? n - 1 : n] = '\0';
@@ -393,18 +393,18 @@ main(int argc, char *argv[])
 				break;
 			if (pfd[2].revents & POLLERR ||
 			    pfd[2].revents & POLLNVAL)
-				errx(EXIT_FAILURE, ".filter error");
+				die(".filter error");
 
 			/* handle .filter output */
 			if (pfd[2].revents & POLLIN) {
 				char buf[BUFSIZ];
 				ssize_t n = read(pfd[2].fd, buf, sizeof buf);
 				if (n == 0)
-					errx(EXIT_FAILURE, ".filter exited");
+					die(".filter exited");
 				if (n == -1)
-					err(EXIT_FAILURE, "read");
+					die("read:");
 				if (write(STDOUT_FILENO, buf, n) == -1)
-					err(EXIT_FAILURE, "write");
+					die("write:");
 			}
 		}
  out:
