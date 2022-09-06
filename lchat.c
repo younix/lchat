@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include "slackline.h"
+#include "util.h"
 
 #ifndef INFTIM
 #define INFTIM -1
@@ -80,29 +81,6 @@ read_file_line(const char *file)
 		err(EXIT_FAILURE ,"strdup");
 
 	return line;
-}
-
-static bool
-bell_match(const char *str, const char *regex_file)
-{
-	FILE *fh = NULL;
-	char cmd[BUFSIZ];
-
-	if (access(regex_file, R_OK) == -1)
-		return true;
-
-	snprintf(cmd, sizeof cmd, "exec grep -qf %s", regex_file);
-
-	if ((fh = popen(cmd, "w")) == NULL)
-		err(EXIT_FAILURE, "popen");
-
-	if (fputs(str, fh) == EOF)
-		err(EXIT_FAILURE, "fputs");
-
-	if (pclose(fh) == 0)
-		return true;
-
-	return false;
 }
 
 static void
