@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <term.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -248,21 +247,18 @@ main(int argc, char *argv[])
 	else
 		printf("\033]0;%s\a", title);
 
-	/* preprate terminal reset on exit */
+	/* prepare terminal reset on exit */
 	if (tcgetattr(fd, &origin_term) == -1)
 		die("tcgetattr:");
+
+	term = origin_term;
 
 	if (atexit(exit_handler) == -1)
 		die("atexit:");
 
-	/* prepare terminal */
-	if (tcgetattr(fd, &term) == -1)
-		die("tcgetattr:");
-
-	/* TODO: clean up this block.  copied from cfmakeraw(3) */
-	term.c_iflag &= ~(IMAXBEL|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-//        term.c_oflag &= ~OPOST;
-	term.c_lflag &= ~(ECHO|ECHONL|ICANON|IEXTEN);
+	term.c_iflag &= ~(BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+	term.c_oflag &= ~OPOST;
+	term.c_lflag &= ~(ECHO|ICANON|IEXTEN);
 	term.c_cflag &= ~(CSIZE|PARENB);
 	term.c_cflag |= CS8;
 	term.c_cc[VMIN] = 1;
