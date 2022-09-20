@@ -351,6 +351,9 @@ main(int argc, char *argv[])
 				}
 				sl_reset(sl);
 				break;
+			case 12: /* ctrl+l -- clear screen, same as clear(1) */
+				fputs("\x1b[2J\x1b[H", stdout);
+				break;
 			default:
 				if (sl_keystroke(sl, c) == -1)
 					die("sl_keystroke");

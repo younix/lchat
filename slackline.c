@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdbool.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -102,6 +102,30 @@ sl_postoptr(struct slackline *sl, size_t pos)
 	}
 
 	return ptr;
+}
+
+static void
+sl_backspace(struct slackline *sl)
+{
+	char *ncur;
+
+	if (sl->rcur == 0)
+		return;
+
+	ncur = sl_postoptr(sl, sl->rcur - 1);
+
+	if (sl->rcur < sl->rlen)
+		memmove(ncur, sl->ptr, sl->last - sl->ptr);
+
+	sl->rcur--;
+	sl->rlen--;
+	sl->bcur = sl_postobyte(sl, sl->rcur);
+	sl->blen = sl_postobyte(sl, sl->rlen);
+
+	sl->last -= sl->ptr - ncur;
+	*sl->last = '\0';
+
+	sl->ptr = ncur;
 }
 
 int
@@ -192,6 +216,9 @@ sl_keystroke(struct slackline *sl, int key)
 		}
 	}
 
+	if (!iscntrl((unsigned char) key))
+		goto compose;
+
 	/* handle ctl keys */
 	switch (key) {
 	case 27:	/* Escape */
@@ -199,30 +226,23 @@ sl_keystroke(struct slackline *sl, int key)
 		return 0;
 	case 127:	/* backspace */
 	case 8:		/* backspace */
-		if (sl->rcur == 0)
-			return 0;
-
-		char *ncur = sl_postoptr(sl, sl->rcur - 1);
-
-		if (sl->rcur < sl->rlen)
-			memmove(ncur, sl->ptr, sl->last - sl->ptr);
-
-		sl->rcur--;
-		sl->rlen--;
-		sl->bcur = sl_postobyte(sl, sl->rcur);
-		sl->blen = sl_postobyte(sl, sl->rlen);
-
-		sl->last -= sl->ptr - ncur;
-		*sl->last = '\0';
-
-		sl->ptr = ncur;
-
+		sl_backspace(sl);
 		return 0;
-	case 21: /* ctrl+u or clearline, weird that it's a NAK */
+	case 21: /* ctrl+u -- clearline */
 		sl_reset(sl);
+		return 0;
+	case 23: /* ctrl+w -- erase previous word */
+		while (sl->rcur != 0 && isspace((unsigned char) *(sl->ptr-1)))
+			sl_backspace(sl);
+
+		while (sl->rcur != 0 && !isspace((unsigned char) *(sl->ptr-1)))
+			sl_backspace(sl);
+		return 0;
+	default:
 		return 0;
 	}
 
+compose:
 	/* byte-wise composing of UTF-8 runes */
 	sl->ubuf[sl->ubuf_len++] = key;
 	if (fullrune(sl->ubuf, sl->ubuf_len) == 0)

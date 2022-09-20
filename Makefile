@@ -1,14 +1,17 @@
 include config.mk
 
-.PHONY: all install filter clean test
+.PHONY: all install uninstall filter clean test
 
 all: lchat
 clean:
 	rm -f lchat *.o *.core sl_test filter/indent
 
 install: lchat
-	cp lchat ${BINDIR}
-	cp lchat.1 ${MAN1DIR}
+	cp lchat ${DESTDIR}${BINDIR}
+	cp lchat.1 ${DESTDIR}${MAN1DIR}
+
+uninstall:
+	rm -f ${DESTDIR}${BINDIR}/lchat ${DESTDIR}${MAN1DIR}/lchat.1
 
 test: sl_test
 	./sl_test
