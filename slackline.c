@@ -231,9 +231,6 @@ sl_keystroke(struct slackline *sl, int key)
 	case 21: /* ctrl+u -- clearline */
 		sl_reset(sl);
 		return 0;
-	case 12: /* ctrl+l -- clear screen, same as clear(1) */
-		printf("\x1b[2J\x1b[H");
-		return 0;
 	case 23: /* ctrl+w -- erase previous word */
 		while (sl->rcur != 0 && isspace((unsigned char) *(sl->ptr-1)))
 			sl_backspace(sl);
