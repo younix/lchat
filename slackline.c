@@ -239,6 +239,8 @@ compose:
 		if ((nbuf = realloc(sl->buf, sl->bufsize * 2)) == NULL)
 			return -1;
 
+		sl->ptr = nbuf + (sl->ptr - sl->buf);
+		sl->last = nbuf + (sl->last - sl->buf);
 		sl->buf = nbuf;
 		sl->bufsize *= 2;
 	}
