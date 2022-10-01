@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <utf.h>
+#include <grapheme.h>
 
 #include "slackline.h"
 
@@ -74,15 +74,8 @@ sl_postobyte(struct slackline *sl, size_t pos)
 	char *ptr = &sl->buf[0];
 	size_t byte = 0;
 
-	for (;pos > 0; pos--) {
-		for (size_t i = 0;; i++) {
-			if (fullrune(ptr, i) == 1) {
-				ptr += i;
-				byte += i;
-				break;
-			}
-		}
-	}
+	for (;pos > 0; pos--)
+		byte += grapheme_next_character_break(ptr+byte, sl->blen-byte);
 
 	return byte;
 }
@@ -90,18 +83,7 @@ sl_postobyte(struct slackline *sl, size_t pos)
 static char *
 sl_postoptr(struct slackline *sl, size_t pos)
 {
-	char *ptr = &sl->buf[0];
-
-	for (;pos > 0; pos--) {
-		for (size_t i = 0;; i++) {
-			if (fullrune(ptr, i) == 1) {
-				ptr += i;
-				break;
-			}
-		}
-	}
-
-	return ptr;
+	return &sl->buf[sl_postobyte(sl, pos)];
 }
 
 static void
@@ -131,6 +113,8 @@ sl_backspace(struct slackline *sl)
 int
 sl_keystroke(struct slackline *sl, int key)
 {
+	uint_least32_t cp;
+
 	if (sl == NULL || sl->rlen < sl->rcur)
 		return -1;
 
@@ -245,7 +229,8 @@ sl_keystroke(struct slackline *sl, int key)
 compose:
 	/* byte-wise composing of UTF-8 runes */
 	sl->ubuf[sl->ubuf_len++] = key;
-	if (fullrune(sl->ubuf, sl->ubuf_len) == 0)
+	if (grapheme_decode_utf8(sl->ubuf, sl->ubuf_len, &cp) > sl->ubuf_len ||
+	    cp == GRAPHEME_INVALID_CODEPOINT)
 		return 0;
 
 	if (sl->blen + sl->ubuf_len >= sl->bufsize) {
