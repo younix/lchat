@@ -257,7 +257,6 @@ main(int argc, char *argv[])
 		die("atexit:");
 
 	term.c_iflag &= ~(BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
-	term.c_oflag &= ~OPOST;
 	term.c_lflag &= ~(ECHO|ICANON|IEXTEN);
 	term.c_cflag &= ~(CSIZE|PARENB);
 	term.c_cflag |= CS8;
