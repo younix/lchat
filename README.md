@@ -18,14 +18,13 @@ Programs you can use lchat as a front end for:
 Requirements
 ------------
 
- * [libutf](https://git.suckless.org/sbase)
+ * [libgrapheme](https://git.suckless.org/libgrapheme)
  * tail(1)
  * grep(1)
 
 TODO
 ----
 
- * support for UTF-8
  * fix: cursor positions in cases of line wrapping
  * add input history
  * split slackline as an extra project
