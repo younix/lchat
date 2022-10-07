@@ -1,9 +1,9 @@
 line chat
 =========
 
-lchat (line chat) is a line oriented front end for for ii-like chat programs.
+lchat (line chat) is a line oriented front end for ii-like chat programs.
 It handles the input from keyboard and output file in parallel.  Thus, you are
-able to type new messages while new chat lines arriving.  Its main focus is on
+able to type messages while new chat lines are arriving.  Its main focus is on
 usability and simplicity.
 
 ![lchat](/lchat.png)

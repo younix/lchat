@@ -36,8 +36,8 @@
 #define INFTIM -1
 #endif
 
-struct termios origin_term;
-struct winsize winsize;
+static struct termios origin_term;
+static struct winsize winsize;
 
 static void
 sigwinch(int sig)
@@ -49,6 +49,14 @@ sigwinch(int sig)
 static void
 exit_handler(void)
 {
+	char *title = getenv("TERM");
+
+	/* reset terminal's window name */
+	if (strncmp(title, "screen", 6) == 0)
+		printf("\033k%s\033\\", title);
+	else
+		printf("\033]0;%s\a", title);
+
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &origin_term) == -1)
 		die("tcsetattr:");
 }
@@ -140,9 +148,8 @@ fork_filter(int *read, int *write)
 static void
 usage(void)
 {
-	fputs("lchat [-aeh] [-n lines] [-p prompt] [-t title] [-i in] [-o out]"
-	    " [directory]\n", stderr);
-	exit(EXIT_FAILURE);
+	die("lchat [-aeh] [-n lines] [-p prompt] [-t title] [-i in] [-o out]"
+	    " [directory]");
 }
 
 int
@@ -164,6 +171,9 @@ main(int argc, char *argv[])
 	size_t history_len = 5;
 	char *prompt = read_file_line(".prompt");
 	char *title = read_file_line(".title");
+
+	if (sl == NULL)
+		die("Failed to initialize slackline");
 
 	if (prompt == NULL)	/* set default prompt */
 		prompt = "> ";
@@ -243,7 +253,7 @@ main(int argc, char *argv[])
 		if ((title = basename(path)) == NULL)
 			die("basename:");
 	}
-	if (strcmp(getenv("TERM"), "screen") == 0)
+	if (strncmp(getenv("TERM"), "screen", 6) == 0)
 		printf("\033k%s\033\\", title);
 	else
 		printf("\033]0;%s\a", title);
@@ -283,7 +293,7 @@ main(int argc, char *argv[])
 		FILE *fh;
 
 		/* open external source */
-		snprintf(tail_cmd, sizeof tail_cmd, "exec tail -n %zd -f %s",
+		snprintf(tail_cmd, sizeof tail_cmd, "exec tail -n %zu -f %s",
 		    history_len, out_file);
 
 		if ((fh = popen(tail_cmd, "r")) == NULL)
