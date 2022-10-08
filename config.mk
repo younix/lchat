@@ -1,16 +1,10 @@
 # paths
 PREFIX	= /usr/local
-BINDIR	= ${PREFIX}/bin
-MANDIR	= ${PREFIX}/share/man
-MAN1DIR	= ${MANDIR}/man1
+BINDIR	= $(PREFIX)/bin
+MANDIR	= $(PREFIX)/share/man
+MAN1DIR	= $(MANDIR)/man1
 
-CC ?= cc
-CFLAGS = -std=c99 -pedantic -Wall -Wextra -g
+CFLAGS = -std=c99 -pedantic -Wall -Wextra -I/usr/local/include
 
-# utf.h
-CFLAGS += -I/usr/local/include
+# grapheme.h
 LIBS = -L/usr/local/lib -lgrapheme
-
-# For sbase users:
-#CFLAGS += -I../sbase
-#LIBS = -L../sbase -lutf
