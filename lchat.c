@@ -37,6 +37,7 @@
 
 static struct termios origin_term;
 static struct winsize winsize;
+static char *TERM;
 
 static void
 sigwinch(int sig)
@@ -48,13 +49,8 @@ sigwinch(int sig)
 static void
 exit_handler(void)
 {
-	char *title = getenv("TERM");
-
 	/* reset terminal's window name */
-	if (strncmp(title, "screen", 6) == 0)
-		printf("\033k%s\033\\", title);
-	else
-		printf("\033]0;%s\a", title);
+	set_title(TERM, TERM);
 
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &origin_term) == -1)
 		die("tcsetattr:");
@@ -171,6 +167,9 @@ main(int argc, char *argv[])
 	char *prompt = read_file_line(".prompt");
 	char *title = read_file_line(".title");
 
+	if ((TERM = getenv("TERM")) == NULL)
+		TERM = "";
+
 	if (sl == NULL)
 		die("Failed to initialize slackline");
 
@@ -252,10 +251,7 @@ main(int argc, char *argv[])
 		if ((title = basename(path)) == NULL)
 			die("basename:");
 	}
-	if (strncmp(getenv("TERM"), "screen", 6) == 0)
-		printf("\033k%s\033\\", title);
-	else
-		printf("\033]0;%s\a", title);
+	set_title(TERM, title);
 
 	/* prepare terminal reset on exit */
 	if (tcgetattr(fd, &origin_term) == -1)

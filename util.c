@@ -62,3 +62,12 @@ bell_match(const char *str, const char *regex_file)
 
 	return false;
 }
+
+void
+set_title(const char *term, char *title)
+{
+	if (strncmp(term, "screen", 6) == 0)
+		printf("\033k%s\033\\", title);
+	else
+		printf("\033]0;%s\a", title);
+}
