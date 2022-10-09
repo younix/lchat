@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015-2017 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2015-2022 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2022 Tom Schwindl <schwindl@posteo.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
