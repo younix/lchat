@@ -75,7 +75,8 @@ sl_postobyte(struct slackline *sl, size_t pos)
 	size_t byte = 0;
 
 	for (;pos > 0; pos--)
-		byte += grapheme_next_character_break(ptr+byte, sl->blen-byte);
+		byte += grapheme_next_character_break_utf8(ptr+byte,
+		    sl->blen-byte);
 
 	return byte;
 }
