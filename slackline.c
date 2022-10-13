@@ -124,18 +124,14 @@ sl_move(struct slackline *sl, enum direction dir)
 		return;
 	case END:
 		sl->rcur = sl->rlen;
-		sl->bcur = sl_postobyte(sl, sl->rcur);
-		sl->ptr = sl->buf + sl->bcur;
-		return;
+		break;
 	case RIGHT:
 		if (sl->rcur < sl->rlen)
 			sl->rcur++;
 		break;
 	case LEFT:
-		if (sl->rcur > 0) {
+		if (sl->rcur > 0)
 			sl->rcur--;
-			sl->bcur = sl_postobyte(sl, sl->rcur);
-		}
 		break;
 	}
 
