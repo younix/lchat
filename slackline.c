@@ -24,6 +24,8 @@
 
 #include "slackline.h"
 
+enum direction {LEFT, RIGHT, HOME, END};
+
 struct slackline *
 sl_init(void)
 {
@@ -112,6 +114,35 @@ sl_backspace(struct slackline *sl)
 	sl->ptr = ncur;
 }
 
+static void
+sl_move(struct slackline *sl, enum direction dir)
+{
+	switch (dir) {
+	case HOME:
+		sl->bcur = sl->rcur = 0;
+		sl->ptr = sl->buf;
+		return;
+	case END:
+		sl->rcur = sl->rlen;
+		sl->bcur = sl_postobyte(sl, sl->rcur);
+		sl->ptr = sl->buf + sl->bcur;
+		return;
+	case RIGHT:
+		if (sl->rcur < sl->rlen)
+			sl->rcur++;
+		break;
+	case LEFT:
+		if (sl->rcur > 0) {
+			sl->rcur--;
+			sl->bcur = sl_postobyte(sl, sl->rcur);
+		}
+		break;
+	}
+
+	sl->bcur = sl_postobyte(sl, sl->rcur);
+	sl->ptr = sl->buf + sl->bcur;
+}
+
 int
 sl_keystroke(struct slackline *sl, int key)
 {
@@ -133,39 +164,22 @@ sl_keystroke(struct slackline *sl, int key)
 		case 'B':	/* down  */
 			break;
 		case 'C':	/* right */
-			if (sl->rcur < sl->rlen)
-				sl->rcur++;
-			sl->bcur = sl_postobyte(sl, sl->rcur);
-			sl->ptr = sl->buf + sl->bcur;
+			sl_move(sl, RIGHT);
 			break;
 		case 'D':	/* left */
-			if (sl->rcur > 0)
-				sl->rcur--;
-			sl->bcur = sl_postobyte(sl, sl->rcur);
-			sl->ptr = sl->buf + sl->bcur;
+			sl_move(sl, LEFT);
 			break;
 		case 'H':	/* Home  */
-			sl->bcur = sl->rcur = 0;
-			sl->ptr = sl->buf;
+			sl_move(sl, HOME);
 			break;
 		case 'F':	/* End   */
-			sl->rcur = sl->rlen;
-			sl->bcur = sl_postobyte(sl, sl->rcur);
-			sl->ptr = sl->buf + sl->bcur;
+			sl_move(sl, END);
 			break;
 		case 'P':	/* delete */
 			if (sl->rcur == sl->rlen)
 				break;
-
-			char *ncur = sl_postoptr(sl, sl->rcur + 1);
-
-			memmove(sl->ptr, ncur, sl->last - ncur);
-
-			sl->rlen--;
-			sl->blen = sl_postobyte(sl, sl->rlen);
-
-			sl->last -= ncur - sl->ptr;
-			*sl->last = '\0';
+			sl_move(sl, RIGHT);
+			sl_backspace(sl);
 			break;
 		case '0':
 		case '1':
@@ -188,13 +202,10 @@ sl_keystroke(struct slackline *sl, int key)
 		case '~':
 			switch(sl->nummod) {
 			case '7':
-				sl->bcur = sl->rcur = 0;
-				sl->ptr = sl->buf;
+				sl_move(sl, HOME);
 				break;
 			case '8':
-				sl->rcur = sl->rlen;
-				sl->bcur = sl_postobyte(sl, sl->rcur);
-				sl->ptr = sl->buf + sl->bcur;
+				sl_move(sl, END);
 				break;
 			}
 			sl->esc = ESC_NONE;
