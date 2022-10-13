@@ -18,7 +18,7 @@ Programs you can use lchat as a front end for:
 Requirements
 ------------
 
- * [libgrapheme](https://git.suckless.org/libgrapheme)
+ * [libgrapheme](https://libs.suckless.org/libgrapheme)
  * tail(1)
  * grep(1)
 
