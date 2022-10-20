@@ -13,20 +13,6 @@ strokes(struct slackline *sl, const char *str)
 }
 
 static void
-print_state(struct slackline *sl)
-{
-	size_t l = sl->last - sl->buf;
-
-	printf("rcur: %zu bcur: %zu rlen: %zu blen: %zu l: %zu buf: \"%s\" ",
-	    sl->rcur, sl->bcur, sl->rlen, sl->blen,     l, sl->buf);
-
-	for (size_t i = 0; i < strlen(sl->buf); i++)
-		printf("%X", sl->buf[i] & 0xff);
-
-	putchar('\n');
-}
-
-static void
 check_init(struct slackline *sl)
 {
 	assert(sl != NULL);
