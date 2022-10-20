@@ -1,6 +1,6 @@
 include config.mk
 
-.PHONY: all install uninstall filter clean test
+.PHONY: all install uninstall filter clean test dist
 
 all: lchat
 clean:
@@ -15,6 +15,12 @@ uninstall:
 
 test: sl_test
 	./sl_test
+
+dist:
+	mkdir -p lchat-$(VERSION)
+	cp -r $$(git ls-tree --name-only HEAD) lchat-$(VERSION)
+	tar -czf lchat-$(VERSION).tar.gz lchat-$(VERSION)
+	rm -fr lchat-$(VERSION)
 
 lchat: lchat.o slackline.o util.o
 	$(CC) -o $@ lchat.o slackline.o util.o $(LIBS)

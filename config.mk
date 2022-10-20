@@ -1,3 +1,5 @@
+VERSION = 1.0
+
 # paths
 PREFIX	= /usr/local
 BINDIR	= $(PREFIX)/bin
