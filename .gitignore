@@ -1,6 +1,7 @@
 *.o
 *.swp
 lchat
+sl_test
 tags
 .bellmatch
 filter/indent
