@@ -200,6 +200,7 @@ sl_keystroke(struct slackline *sl, int key)
 			case '7':
 				sl_move(sl, HOME);
 				break;
+			case '4':
 			case '8':
 				sl_move(sl, END);
 				break;
