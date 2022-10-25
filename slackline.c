@@ -197,12 +197,19 @@ sl_keystroke(struct slackline *sl, int key)
 		switch(key) {
 		case '~':
 			switch(sl->nummod) {
+			case '1':	/* Home */
 			case '7':
 				sl_move(sl, HOME);
 				break;
-			case '4':
+			case '4':	/* End */
 			case '8':
 				sl_move(sl, END);
+				break;
+			case '3':	/* Delete */
+				if (sl->rcur == sl->rlen)
+					break;
+				sl_move(sl, RIGHT);
+				sl_backspace(sl);
 				break;
 			}
 			sl->esc = ESC_NONE;
