@@ -10,10 +10,11 @@ usability and simplicity.
 
 Programs you can use lchat as a front end for:
 
- * http://tools.suckless.org/ii/
- * http://ratox.2f30.org/
- * http://github.com/younix/sj/
- * http://23.fi/jj/
+ * https://tools.suckless.org/ii/
+ * https://git.2f30.org/ratox
+ * https://github.com/younix/sj/
+ * https://23.fi/jj/
+ * https://github.com/czarkoff/icb
 
 Requirements
 ------------
