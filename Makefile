@@ -22,8 +22,8 @@ dist:
 	tar -czf lchat-$(VERSION).tar.gz lchat-$(VERSION)
 	rm -fr lchat-$(VERSION)
 
-lchat: lchat.o slackline.o util.o
-	$(CC) -o $@ lchat.o slackline.o util.o $(LIBS)
+lchat: lchat.o slackline.o util.o slackline_emacs.o
+	$(CC) -o $@ lchat.o slackline.o slackline_emacs.o util.o $(LIBS)
 
 lchat.o: lchat.c
 	$(CC) -c $(CFLAGS) -D_BSD_SOURCE -D_XOPEN_SOURCE -D_GNU_SOURCE \
@@ -41,6 +41,9 @@ sl_test: sl_test.o slackline.o slackline.h
 
 slackline.o: slackline.c slackline.h
 	$(CC) -c $(CFLAGS) -o $@ slackline.c
+
+slackline_emacs.o: slackline_emacs.c slackline.h
+	$(CC) -c $(CFLAGS) -o $@ slackline_emacs.c
 
 util.o: util.c util.h
 	$(CC) -c $(CFLAGS) -D_BSD_SOURCE -o $@ util.c

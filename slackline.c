@@ -22,13 +22,14 @@
 
 #include <grapheme.h>
 
+#include "slackline_internals.h"
 #include "slackline.h"
-
-enum direction {LEFT, RIGHT, HOME, END};
+#include "util.h"
 
 struct slackline *
 sl_init(void)
 {
+	char *mode = getenv("EDITOR");
 	struct slackline *sl = malloc(sizeof *sl);
 
 	if (sl == NULL)
@@ -44,6 +45,14 @@ sl_init(void)
 	sl->ubuf_len = 0;
 
 	sl_reset(sl);
+
+	sl->mode = SL_DEFAULT;
+	if (mode != NULL) {
+		if (strcmp(mode, "emacs") == 0)
+			sl->mode = SL_EMACS;
+		else if (strcmp(mode, "vi") == 0)
+			sl->mode = SL_VI;
+	}
 
 	return sl;
 }
@@ -71,7 +80,13 @@ sl_reset(struct slackline *sl)
 	sl->ubuf_len = 0;
 }
 
-static size_t
+void
+sl_mode(struct slackline *sl, enum mode mode)
+{
+	sl->mode = mode;
+}
+
+size_t
 sl_postobyte(struct slackline *sl, size_t pos)
 {
 	char *ptr = &sl->buf[0];
@@ -84,13 +99,13 @@ sl_postobyte(struct slackline *sl, size_t pos)
 	return byte;
 }
 
-static char *
+char *
 sl_postoptr(struct slackline *sl, size_t pos)
 {
 	return &sl->buf[sl_postobyte(sl, pos)];
 }
 
-static void
+void
 sl_backspace(struct slackline *sl)
 {
 	char *ncur;
@@ -114,7 +129,7 @@ sl_backspace(struct slackline *sl)
 	sl->ptr = ncur;
 }
 
-static void
+void
 sl_move(struct slackline *sl, enum direction dir)
 {
 	switch (dir) {
@@ -139,21 +154,41 @@ sl_move(struct slackline *sl, enum direction dir)
 	sl->ptr = sl->buf + sl->bcur;
 }
 
-int
-sl_keystroke(struct slackline *sl, int key)
+static void
+sl_default(struct slackline *sl, int key)
 {
-	uint_least32_t cp;
+	switch (key) {
+	case 27:	/* Escape */
+		sl->esc = ESC;
+		break;
+	case 21:
+		sl_reset(sl);
+		break;
+	case 23: /* ctrl+w -- erase previous word */
+		while (sl->rcur != 0 && isspace((unsigned char) *(sl->ptr-1)))
+			sl_backspace(sl);
+		while (sl->rcur != 0 && !isspace((unsigned char) *(sl->ptr-1)))
+			sl_backspace(sl);
+		break;
+	case 127:	/* backspace */
+	case 8:		/* backspace */
+		sl_backspace(sl);
+		break;
+	default:
+		break;
+	}
+}
 
-	if (sl == NULL || sl->rlen < sl->rcur)
-		return -1;
-
+static int
+sl_esc(struct slackline *sl, int key)
+{
 	/* handle escape sequences */
 	switch (sl->esc) {
 	case ESC_NONE:
 		break;
 	case ESC:
 		sl->esc = key == '[' ? ESC_BRACKET : ESC_NONE;
-		return 0;
+		return 1;
 	case ESC_BRACKET:
 		switch (key) {
 		case 'A':	/* up    */
@@ -189,10 +224,10 @@ sl_keystroke(struct slackline *sl, int key)
 		case '9':
 			sl->nummod = key;
 			sl->esc = ESC_BRACKET_NUM;
-			return 0;
+			return 1;
 		}
 		sl->esc = ESC_NONE;
-		return 0;
+		return 1;
 	case ESC_BRACKET_NUM:
 		switch(key) {
 		case '~':
@@ -213,35 +248,38 @@ sl_keystroke(struct slackline *sl, int key)
 				break;
 			}
 			sl->esc = ESC_NONE;
-			return 0;
+			return 1;
 		}
 	}
 
+	return 0;
+}
+
+int
+sl_keystroke(struct slackline *sl, int key)
+{
+	uint_least32_t cp;
+
+	if (sl == NULL || sl->rlen < sl->rcur)
+		return -1;
+	if (sl_esc(sl, key))
+		return 0;
 	if (!iscntrl((unsigned char) key))
 		goto compose;
 
-	/* handle ctl keys */
-	switch (key) {
-	case 27:	/* Escape */
-		sl->esc = ESC;
-		return 0;
-	case 127:	/* backspace */
-	case 8:		/* backspace */
-		sl_backspace(sl);
-		return 0;
-	case 21: /* ctrl+u -- clearline */
-		sl_reset(sl);
-		return 0;
-	case 23: /* ctrl+w -- erase previous word */
-		while (sl->rcur != 0 && isspace((unsigned char) *(sl->ptr-1)))
-			sl_backspace(sl);
-
-		while (sl->rcur != 0 && !isspace((unsigned char) *(sl->ptr-1)))
-			sl_backspace(sl);
-		return 0;
-	default:
-		return 0;
+	switch (sl->mode) {
+	case SL_DEFAULT:
+		sl_default(sl, key);
+		break;
+	case SL_EMACS:
+		sl_default(sl, key);
+		sl_emacs(sl, key);
+		break;
+	case SL_VI:
+		/* TODO: implement vi-mode */
+		break;
 	}
+	return 0;
 
 compose:
 	/* byte-wise composing of UTF-8 runes */
