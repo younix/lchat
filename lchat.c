@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <poll.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -183,7 +184,7 @@ main(int argc, char *argv[])
 	char *in_file = NULL;
 	char *out_file = NULL;
 
-	while ((ch = getopt(argc, argv, "an:i:eo:p:t:uh")) != -1) {
+	while ((ch = getopt(argc, argv, "an:i:eo:p:t:uhm:")) != -1) {
 		switch (ch) {
 		case 'a':
 			bell_flag = false;
@@ -216,6 +217,10 @@ main(int argc, char *argv[])
 			break;
 		case 'u':
 			ucspi = true;
+			break;
+		case 'm':
+			if (strcmp(optarg, "emacs") == 0)
+				sl_mode(sl, SL_EMACS);
 			break;
 		case 'h':
 		default:
@@ -342,8 +347,6 @@ main(int argc, char *argv[])
 				return EXIT_SUCCESS;
 
 			switch (c) {
-			case 4:		/* eot */
-				return EXIT_SUCCESS;
 			case 13:	/* return */
 				if (sl->rlen == 0 && empty_line == false)
 					goto out;
