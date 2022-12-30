@@ -36,8 +36,8 @@ filter/indent: filter/indent.c util.o util.h
 sl_test.o: sl_test.c slackline.h
 	$(CC) $(CFLAGS) -Wno-sign-compare -c -o $@ sl_test.c
 
-sl_test: sl_test.o slackline.o slackline.h
-	$(CC) $(CFLAGS) -o $@ sl_test.o slackline.o $(LIBS)
+sl_test: sl_test.o slackline.o slackline_emacs.o slackline.h
+	$(CC) $(CFLAGS) -o $@ sl_test.o slackline.o slackline_emacs.o $(LIBS)
 
 slackline.o: slackline.c slackline.h
 	$(CC) -c $(CFLAGS) -o $@ slackline.c
