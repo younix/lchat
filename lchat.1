@@ -12,6 +12,7 @@
 .Op Fl t Ar title
 .Op Fl i Ar in
 .Op Fl o Ar out
+.Op Fl m Ar mode
 .Op directory
 .Sh DESCRIPTION
 The
@@ -69,6 +70,14 @@ as out-file.
 Default is 'out'.
 This overrides
 .Ar directory .
+.It Fl m Ar mode
+Use the specified
+.Ar mode .
+Currently, the only valid argument is
+.Ar emacs .
+See
+.Sy MODES
+for more information
 .It Ar directory
 Uses
 .Ar directory
@@ -89,6 +98,13 @@ contains the prompt string.
 .It .title
 contains the terminal window title.
 .El
+.Sh MODES
+.Nm
+is able to interpret keypresses differently depending on the mode it is
+operating in. Each mode defines a set of keybindings and corresponding actions.
+The mode cannot be changed while
+.Nm
+is running.
 .Sh SEE ALSO
 .Xr ii 1 ,
 .Xr tail 1
