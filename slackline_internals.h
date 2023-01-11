@@ -1,7 +1,7 @@
 #ifndef SLACKLINE_INTERNALS_H
 #define SLACKLINE_INTERNALS_H
 
-#include "slackline.h"
+struct slackline;
 
 enum direction {LEFT, RIGHT, HOME, END};
 
