@@ -164,7 +164,7 @@ sl_default(struct slackline *sl, int key)
 	case CTRL_U:
 		sl_reset(sl);
 		break;
-	case CTRL_W:
+	case CTRL_W: /* erase previous word */
 		while (sl->rcur != 0 && isspace((unsigned char) *(sl->ptr-1)))
 			sl_backspace(sl);
 		while (sl->rcur != 0 && !isspace((unsigned char) *(sl->ptr-1)))
