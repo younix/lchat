@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "slackline.h"
 #include "slackline_internals.h"
 
 void
