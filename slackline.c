@@ -158,20 +158,20 @@ static void
 sl_default(struct slackline *sl, int key)
 {
 	switch (key) {
-	case 27:	/* Escape */
+	case ESC_KEY:
 		sl->esc = ESC;
 		break;
-	case 21:
+	case CTRL_U:
 		sl_reset(sl);
 		break;
-	case 23: /* ctrl+w -- erase previous word */
+	case CTRL_W:
 		while (sl->rcur != 0 && isspace((unsigned char) *(sl->ptr-1)))
 			sl_backspace(sl);
 		while (sl->rcur != 0 && !isspace((unsigned char) *(sl->ptr-1)))
 			sl_backspace(sl);
 		break;
-	case 127:	/* backspace */
-	case 8:		/* backspace */
+	case BACKSPACE:
+	case VT_BACKSPACE:
 		sl_backspace(sl);
 		break;
 	default:
