@@ -221,6 +221,8 @@ main(int argc, char *argv[])
 		case 'm':
 			if (strcmp(optarg, "emacs") == 0)
 				sl_mode(sl, SL_EMACS);
+			else
+				die("lchat: invalid mode");
 			break;
 		case 'h':
 		default:
