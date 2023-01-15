@@ -1,5 +1,5 @@
-#ifndef SLACKLIINE_H
-#define SLACKLIINE_H
+#ifndef SLACKLINE_H
+#define SLACKLINE_H
 
 enum esc_seq {ESC_NONE, ESC, ESC_BRACKET, ESC_BRACKET_NUM};
 enum mode {SL_DEFAULT, SL_EMACS, SL_VI};
