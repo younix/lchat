@@ -26,6 +26,9 @@
 #include "slackline.h"
 #include "util.h"
 
+/* CTRL+W: stop erasing if certain characters are reached. */
+#define IS_WORD_BREAK "\f\n\r\t\v (){}[]\\/#,.=-+|%$!@^&*"
+
 struct slackline *
 sl_init(void)
 {
@@ -165,9 +168,9 @@ sl_default(struct slackline *sl, int key)
 		sl_reset(sl);
 		break;
 	case CTRL_W: /* erase previous word */
-		while (sl->rcur != 0 && isspace((unsigned char) *(sl->ptr-1)))
+		while (sl->rcur != 0 && strchr(IS_WORD_BREAK, *(sl->ptr-1)) != NULL)
 			sl_backspace(sl);
-		while (sl->rcur != 0 && !isspace((unsigned char) *(sl->ptr-1)))
+		while (sl->rcur != 0 && strchr(IS_WORD_BREAK, *(sl->ptr-1)) == NULL)
 			sl_backspace(sl);
 		break;
 	case BACKSPACE:
