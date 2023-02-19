@@ -145,7 +145,7 @@ fork_filter(int *read, int *write)
 static void
 usage(void)
 {
-	die("lchat [-aeh] [-n lines] [-p prompt] [-t title] [-i in] [-o out]"
+	die("lchat [-aeh] [-m emacs|vi] [-n lines] [-p prompt] [-t title] [-i in] [-o out]"
 	    " [directory]");
 }
 
@@ -219,8 +219,10 @@ main(int argc, char *argv[])
 			ucspi = true;
 			break;
 		case 'm':
-			if (strcmp(optarg, "emacs") == 0)
+			if (strcasecmp(optarg, "emacs") == 0)
 				sl_mode(sl, SL_EMACS);
+			else if (strcasecmp(optarg, "vi") == 0)
+				fputs("lchat: vi mode is currently unimplemented. Falling back to default..\n", stderr);
 			else
 				die("lchat: invalid mode");
 			break;

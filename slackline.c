@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include <grapheme.h>
 
@@ -51,9 +52,9 @@ sl_init(void)
 
 	sl->mode = SL_DEFAULT;
 	if (mode != NULL) {
-		if (strcmp(mode, "emacs") == 0)
+		if (strcasecmp(mode, "emacs") == 0)
 			sl->mode = SL_EMACS;
-		else if (strcmp(mode, "vi") == 0)
+		else if (strcasecmp(mode, "vi") == 0)
 			sl->mode = SL_VI;
 	}
 
