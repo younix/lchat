@@ -152,6 +152,10 @@ usage(void)
 int
 main(int argc, char *argv[])
 {
+#ifdef __OpenBSD__
+	if (pledge("stdio rpath wpath tty proc exec", NULL) == -1)
+		die("pledge:");
+#endif
 	struct pollfd pfd[3];
 	struct termios term;
 	struct slackline *sl = sl_init();
