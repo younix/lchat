@@ -196,24 +196,20 @@ main(int argc, char *argv[])
 				die("strtoull:");
 			break;
 		case 'i':
-			if ((in_file = strdup(optarg)) == NULL)
-				die("strdup:");
+			in_file = optarg;
 			break;
 		case 'e':
 			empty_line = true;
 			break;
 		case 'o':
-			if ((out_file = strdup(optarg)) == NULL)
-				die("strdup:");
+			out_file = optarg;
 			break;
 		case 'p':
-			if ((prompt = strdup(optarg)) == NULL)
-				die("strdup:");
+			prompt = optarg;
 			prompt_len = strlen(prompt);
 			break;
 		case 't':
-			if ((title = strdup(optarg)) == NULL)
-				die("strdup:");
+			title = optarg;
 			break;
 		case 'u':
 			ucspi = true;
