@@ -68,11 +68,10 @@ main(void)
 		/* print indented text */
 		while ((word = strsep(&next, " ")) != NULL) {
 			tw -= strlen(word) + 1;
-			if (tw < 0 && !first) {
+			if (tw < 0 && !first)
 				fputs("\n                  ", stdout);
-				tw = cols - pw;
-				first = true;
-			}
+			if (tw < 0)
+				tw = cols - pw - strlen(word);
 
 			fputc(' ', stdout);
 			fputs(word, stdout);

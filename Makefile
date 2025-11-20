@@ -31,7 +31,7 @@ lchat.o: lchat.c
 
 filter: filter/indent
 filter/indent: filter/indent.c util.o util.h
-	$(CC) $(CFLAGS) -o $@ filter/indent.c util.o
+	$(CC) $(CFLAGS) -D_BSD_SOURCE -o $@ filter/indent.c util.o
 
 sl_test.o: sl_test.c slackline.h
 	$(CC) $(CFLAGS) -Wno-sign-compare -c -o $@ sl_test.c
