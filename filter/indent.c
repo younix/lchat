@@ -10,6 +10,7 @@
 #define color1 34
 #define color2 33
 #define color3 35
+#define color4 2	/* meta data */
 
 int
 main(void)
@@ -30,7 +31,7 @@ main(void)
 		next++;				/* skip space */
 
 		if (next == NULL || next[0] == '-' || time == 0) {
-			fputs(buf, stdout);
+			printf("\033[%dm%s\033[m", color4, buf);
 			fflush(stdout);
 			continue;
 		}
