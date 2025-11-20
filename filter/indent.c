@@ -7,9 +7,9 @@
 
 #include "../util.h"
 
-#define color1 34
-#define color2 33
-#define color3 35
+#define color1 37	/* message 1 */
+#define color2 97	/* message 2 */
+#define color3 31	/* bell match */
 #define color4 2	/* meta data */
 
 int
@@ -57,7 +57,7 @@ main(void)
 		/* print prompt */
 		/* HH:MM nnnnnnnnnnnn ttttttttttttt */
 		// e[7;30;40m
-		printf("\033[1;%dm\033[K%s %*s", color, timestr, 12,
+		printf("\033[%dm\033[K%s %*s", color, timestr, 12,
 		    strcmp(nick, old_nick) == 0 ? "" : nick);
 
 		strlcpy(old_nick, nick, sizeof old_nick);
